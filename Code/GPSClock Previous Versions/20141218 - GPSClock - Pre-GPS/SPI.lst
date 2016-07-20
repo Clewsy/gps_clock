@@ -1,0 +1,85 @@
+   1               		.file	"SPI.c"
+   2               	__SREG__ = 0x3f
+   3               	__SP_H__ = 0x3e
+   4               	__SP_L__ = 0x3d
+   5               	__CCP__  = 0x34
+   6               	__tmp_reg__ = 0
+   7               	__zero_reg__ = 1
+  15               	.Ltext0:
+  16               	.global	initSPI
+  18               	initSPI:
+  19               	.LFB6:
+  20               	.LM1:
+  21               	.LVL0:
+  22               	/* prologue: function */
+  23               	/* frame size = 0 */
+  24               	.LM2:
+  25 0000 239A      		sbi 36-32,3
+  26               	.LM3:
+  27 0002 2C9A      		sbi 37-32,4
+  28               	.LM4:
+  29 0004 259A      		sbi 36-32,5
+  30               	.LM5:
+  31 0006 229A      		sbi 36-32,2
+  32               	.LM6:
+  33 0008 9CB5      		in r25,76-32
+  34 000a 9260      		ori r25,lo8(2)
+  35 000c 9CBD      		out 76-32,r25
+  36               	.LM7:
+  37 000e 9CB5      		in r25,76-32
+  38 0010 9061      		ori r25,lo8(16)
+  39 0012 9CBD      		out 76-32,r25
+  40               	.LM8:
+  41 0014 9CB5      		in r25,76-32
+  42 0016 9064      		ori r25,lo8(64)
+  43 0018 9CBD      		out 76-32,r25
+  44               	.LM9:
+  45 001a 9CB5      		in r25,76-32
+  46 001c 880F      		lsl r24
+  47 001e 880F      		lsl r24
+  48 0020 880F      		lsl r24
+  49               	.LVL1:
+  50 0022 982B      		or r25,r24
+  51 0024 9CBD      		out 76-32,r25
+  52               	.LM10:
+  53 0026 8CB5      		in r24,76-32
+  54 0028 660F      		lsl r22
+  55 002a 660F      		lsl r22
+  56               	.LVL2:
+  57 002c 862B      		or r24,r22
+  58 002e 8CBD      		out 76-32,r24
+  59               	/* epilogue start */
+  60               	.LM11:
+  61 0030 0895      		ret
+  62               	.LFE6:
+  64               	.global	SPI_tradeByte
+  66               	SPI_tradeByte:
+  67               	.LFB7:
+  68               	.LM12:
+  69               	.LVL3:
+  70               	/* prologue: function */
+  71               	/* frame size = 0 */
+  72               	.LM13:
+  73 0032 8EBD      		out 78-32,r24
+  74               	.L4:
+  75               	.LM14:
+  76 0034 0DB4      		in __tmp_reg__,77-32
+  77 0036 07FE      		sbrs __tmp_reg__,7
+  78 0038 00C0      		rjmp .L4
+  79               	/* epilogue start */
+  80               	.LM15:
+  81 003a 0895      		ret
+  82               	.LFE7:
+ 116               	.Letext0:
+DEFINED SYMBOLS
+                            *ABS*:00000000 SPI.c
+C:\Users\Jadonis\AppData\Local\Temp/cclleeU0.s:2      *ABS*:0000003f __SREG__
+C:\Users\Jadonis\AppData\Local\Temp/cclleeU0.s:3      *ABS*:0000003e __SP_H__
+C:\Users\Jadonis\AppData\Local\Temp/cclleeU0.s:4      *ABS*:0000003d __SP_L__
+C:\Users\Jadonis\AppData\Local\Temp/cclleeU0.s:5      *ABS*:00000034 __CCP__
+C:\Users\Jadonis\AppData\Local\Temp/cclleeU0.s:6      *ABS*:00000000 __tmp_reg__
+C:\Users\Jadonis\AppData\Local\Temp/cclleeU0.s:7      *ABS*:00000001 __zero_reg__
+C:\Users\Jadonis\AppData\Local\Temp/cclleeU0.s:18     .text:00000000 initSPI
+C:\Users\Jadonis\AppData\Local\Temp/cclleeU0.s:66     .text:00000032 SPI_tradeByte
+
+NO UNDEFINED SYMBOLS

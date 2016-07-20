@@ -1,0 +1,159 @@
+   1               		.file	"DS3234RTC.c"
+   2               	__SREG__ = 0x3f
+   3               	__SP_H__ = 0x3e
+   4               	__SP_L__ = 0x3d
+   5               	__CCP__  = 0x34
+   6               	__tmp_reg__ = 0
+   7               	__zero_reg__ = 1
+  15               	.Ltext0:
+  16               	.global	init_RTC
+  18               	init_RTC:
+  19               	.LFB2:
+  20               	.LM1:
+  21               	/* prologue: function */
+  22               	/* frame size = 0 */
+  23               	.LM2:
+  24 0000 229A      		sbi 36-32,2
+  25               	.LM3:
+  26 0002 2A9A      		sbi 37-32,2
+  27               	/* epilogue start */
+  28               	.LM4:
+  29 0004 0895      		ret
+  30               	.LFE2:
+  32               	.global	RTC_SPI_writeByte
+  34               	RTC_SPI_writeByte:
+  35               	.LFB4:
+  36               	.LM5:
+  37               	.LVL0:
+  38 0006 1F93      		push r17
+  39               	/* prologue: function */
+  40               	/* frame size = 0 */
+  41 0008 162F      		mov r17,r22
+  42               	.LM6:
+  43 000a 2A98      		cbi 37-32,2
+  44               	.LM7:
+  45 000c 0E94 0000 		call SPI_tradeByte
+  46               	.LVL1:
+  47               	.LM8:
+  48 0010 812F      		mov r24,r17
+  49 0012 0E94 0000 		call SPI_tradeByte
+  50               	.LM9:
+  51 0016 2A9A      		sbi 37-32,2
+  52               	/* epilogue start */
+  53               	.LM10:
+  54 0018 1F91      		pop r17
+  55               	.LVL2:
+  56 001a 0895      		ret
+  57               	.LFE4:
+  59               	.global	RTC_SPI_readByte
+  61               	RTC_SPI_readByte:
+  62               	.LFB3:
+  63               	.LM11:
+  64               	.LVL3:
+  65               	/* prologue: function */
+  66               	/* frame size = 0 */
+  67               	.LM12:
+  68 001c 2A98      		cbi 37-32,2
+  69               	.LM13:
+  70 001e 0E94 0000 		call SPI_tradeByte
+  71               	.LVL4:
+  72               	.LM14:
+  73 0022 80E0      		ldi r24,lo8(0)
+  74 0024 0E94 0000 		call SPI_tradeByte
+  75               	.LM15:
+  76 0028 2A9A      		sbi 37-32,2
+  77               	.LM16:
+  78 002a 8EB5      		in r24,78-32
+  79               	/* epilogue start */
+  80               	.LM17:
+  81 002c 0895      		ret
+  82               	.LFE3:
+  84               	.global	RTC_getTime
+  86               	RTC_getTime:
+  87               	.LFB5:
+  88               	.LM18:
+  89               	.LVL5:
+  90 002e CF93      		push r28
+  91 0030 DF93      		push r29
+  92               	/* prologue: function */
+  93               	/* frame size = 0 */
+  94 0032 EC01      		movw r28,r24
+  95               	.LM19:
+  96 0034 80E0      		ldi r24,lo8(0)
+  97               	.LVL6:
+  98 0036 0E94 0000 		call RTC_SPI_readByte
+  99 003a 8883      		st Y,r24
+ 100               	.LM20:
+ 101 003c 81E0      		ldi r24,lo8(1)
+ 102 003e 0E94 0000 		call RTC_SPI_readByte
+ 103 0042 8983      		std Y+1,r24
+ 104               	.LM21:
+ 105 0044 82E0      		ldi r24,lo8(2)
+ 106 0046 0E94 0000 		call RTC_SPI_readByte
+ 107 004a 8F73      		andi r24,lo8(63)
+ 108 004c 8A83      		std Y+2,r24
+ 109               	.LM22:
+ 110 004e 82E0      		ldi r24,lo8(2)
+ 111 0050 0E94 0000 		call RTC_SPI_readByte
+ 112 0054 90E0      		ldi r25,lo8(0)
+ 113 0056 8074      		andi r24,lo8(64)
+ 114 0058 9070      		andi r25,hi8(64)
+ 115 005a 26E0      		ldi r18,6
+ 116 005c 9595      	1:	asr r25
+ 117 005e 8795      		ror r24
+ 118 0060 2A95      		dec r18
+ 119 0062 01F4      		brne 1b
+ 120 0064 8B83      		std Y+3,r24
+ 121               	.LM23:
+ 122 0066 83E0      		ldi r24,lo8(3)
+ 123 0068 0E94 0000 		call RTC_SPI_readByte
+ 124 006c 8C83      		std Y+4,r24
+ 125               	.LM24:
+ 126 006e 84E0      		ldi r24,lo8(4)
+ 127 0070 0E94 0000 		call RTC_SPI_readByte
+ 128 0074 8D83      		std Y+5,r24
+ 129               	.LM25:
+ 130 0076 85E0      		ldi r24,lo8(5)
+ 131 0078 0E94 0000 		call RTC_SPI_readByte
+ 132 007c 8F71      		andi r24,lo8(31)
+ 133 007e 8E83      		std Y+6,r24
+ 134               	.LM26:
+ 135 0080 86E0      		ldi r24,lo8(6)
+ 136 0082 0E94 0000 		call RTC_SPI_readByte
+ 137 0086 8F83      		std Y+7,r24
+ 138               	.LM27:
+ 139 0088 85E0      		ldi r24,lo8(5)
+ 140 008a 0E94 0000 		call RTC_SPI_readByte
+ 141 008e 87FF      		sbrs r24,7
+ 142 0090 00C0      		rjmp .L8
+ 143               	.LM28:
+ 144 0092 80E2      		ldi r24,lo8(32)
+ 145 0094 00C0      		rjmp .L11
+ 146               	.L8:
+ 147               	.LM29:
+ 148 0096 89E1      		ldi r24,lo8(25)
+ 149               	.L11:
+ 150 0098 8887      		std Y+8,r24
+ 151               	/* epilogue start */
+ 152               	.LM30:
+ 153 009a DF91      		pop r29
+ 154 009c CF91      		pop r28
+ 155               	.LVL7:
+ 156 009e 0895      		ret
+ 157               	.LFE5:
+ 207               	.Letext0:
+DEFINED SYMBOLS
+                            *ABS*:00000000 DS3234RTC.c
+C:\Users\Jadonis\AppData\Local\Temp/ccVekbZe.s:2      *ABS*:0000003f __SREG__
+C:\Users\Jadonis\AppData\Local\Temp/ccVekbZe.s:3      *ABS*:0000003e __SP_H__
+C:\Users\Jadonis\AppData\Local\Temp/ccVekbZe.s:4      *ABS*:0000003d __SP_L__
+C:\Users\Jadonis\AppData\Local\Temp/ccVekbZe.s:5      *ABS*:00000034 __CCP__
+C:\Users\Jadonis\AppData\Local\Temp/ccVekbZe.s:6      *ABS*:00000000 __tmp_reg__
+C:\Users\Jadonis\AppData\Local\Temp/ccVekbZe.s:7      *ABS*:00000001 __zero_reg__
+C:\Users\Jadonis\AppData\Local\Temp/ccVekbZe.s:18     .text:00000000 init_RTC
+C:\Users\Jadonis\AppData\Local\Temp/ccVekbZe.s:34     .text:00000006 RTC_SPI_writeByte
+C:\Users\Jadonis\AppData\Local\Temp/ccVekbZe.s:61     .text:0000001c RTC_SPI_readByte
+C:\Users\Jadonis\AppData\Local\Temp/ccVekbZe.s:86     .text:0000002e RTC_getTime
+
+UNDEFINED SYMBOLS
+SPI_tradeByte

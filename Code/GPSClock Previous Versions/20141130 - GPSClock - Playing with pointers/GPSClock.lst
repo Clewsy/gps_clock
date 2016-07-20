@@ -1,0 +1,456 @@
+   1               		.file	"GPSClock.c"
+   2               	__SREG__ = 0x3f
+   3               	__SP_H__ = 0x3e
+   4               	__SP_L__ = 0x3d
+   5               	__CCP__  = 0x34
+   6               	__tmp_reg__ = 0
+   7               	__zero_reg__ = 1
+  15               	.Ltext0:
+  16               	.global	refresh_display
+  18               	refresh_display:
+  19               	.LFB7:
+  20               	.LM1:
+  21 0000 EF92      		push r14
+  22 0002 FF92      		push r15
+  23 0004 0F93      		push r16
+  24 0006 1F93      		push r17
+  25               	/* prologue: function */
+  26               	/* frame size = 0 */
+  27               	.LM2:
+  28 0008 80E0      		ldi r24,lo8(time+6)
+  29 000a E82E      		mov r14,r24
+  30 000c 80E0      		ldi r24,hi8(time+6)
+  31 000e F82E      		mov r15,r24
+  32 0010 6091 0000 		lds r22,time+6
+  33 0014 6295      		swap r22
+  34 0016 6F70      		andi r22,lo8(15)
+  35 0018 87E8      		ldi r24,lo8(-121)
+  36 001a 0E94 0000 		call SEV_SEG_writeByte
+  37               	.LM3:
+  38 001e 6091 0000 		lds r22,time+6
+  39 0022 6F70      		andi r22,lo8(15)
+  40 0024 86E8      		ldi r24,lo8(-122)
+  41 0026 0E94 0000 		call SEV_SEG_writeByte
+  42               	.LM4:
+  43 002a F701      		movw r30,r14
+  44 002c 6291      		ld r22,-Z
+  45 002e 8F01      		movw r16,r30
+  46 0030 6295      		swap r22
+  47 0032 6F70      		andi r22,lo8(15)
+  48 0034 85E8      		ldi r24,lo8(-123)
+  49 0036 0E94 0000 		call SEV_SEG_writeByte
+  50               	.LM5:
+  51 003a F801      		movw r30,r16
+  52 003c 6081      		ld r22,Z
+  53 003e 6F70      		andi r22,lo8(15)
+  54 0040 6068      		ori r22,lo8(-128)
+  55 0042 84E8      		ldi r24,lo8(-124)
+  56 0044 0E94 0000 		call SEV_SEG_writeByte
+  57               	.LM6:
+  58 0048 8701      		movw r16,r14
+  59 004a 0250      		subi r16,lo8(-(-2))
+  60 004c 1040      		sbci r17,hi8(-(-2))
+  61 004e F801      		movw r30,r16
+  62 0050 6081      		ld r22,Z
+  63 0052 6295      		swap r22
+  64 0054 6F70      		andi r22,lo8(15)
+  65 0056 83E8      		ldi r24,lo8(-125)
+  66 0058 0E94 0000 		call SEV_SEG_writeByte
+  67               	.LM7:
+  68 005c F801      		movw r30,r16
+  69 005e 6081      		ld r22,Z
+  70 0060 6F70      		andi r22,lo8(15)
+  71 0062 6068      		ori r22,lo8(-128)
+  72 0064 82E8      		ldi r24,lo8(-126)
+  73 0066 0E94 0000 		call SEV_SEG_writeByte
+  74               	.LM8:
+  75 006a 8701      		movw r16,r14
+  76 006c 0350      		subi r16,lo8(-(-3))
+  77 006e 1040      		sbci r17,hi8(-(-3))
+  78 0070 F801      		movw r30,r16
+  79 0072 6081      		ld r22,Z
+  80 0074 6295      		swap r22
+  81 0076 6F70      		andi r22,lo8(15)
+  82 0078 81E8      		ldi r24,lo8(-127)
+  83 007a 0E94 0000 		call SEV_SEG_writeByte
+  84               	.LM9:
+  85 007e F801      		movw r30,r16
+  86 0080 6081      		ld r22,Z
+  87 0082 6F70      		andi r22,lo8(15)
+  88 0084 6068      		ori r22,lo8(-128)
+  89 0086 88E0      		ldi r24,lo8(8)
+  90 0088 0E94 0000 		call SEV_SEG_writeByte
+  91               	.LM10:
+  92 008c 8701      		movw r16,r14
+  93 008e 0450      		subi r16,lo8(-(-4))
+  94 0090 1040      		sbci r17,hi8(-(-4))
+  95 0092 F801      		movw r30,r16
+  96 0094 6081      		ld r22,Z
+  97 0096 6295      		swap r22
+  98 0098 6F70      		andi r22,lo8(15)
+  99 009a 87E0      		ldi r24,lo8(7)
+ 100 009c 0E94 0000 		call SEV_SEG_writeByte
+ 101               	.LM11:
+ 102 00a0 F801      		movw r30,r16
+ 103 00a2 6081      		ld r22,Z
+ 104 00a4 6F70      		andi r22,lo8(15)
+ 105 00a6 6068      		ori r22,lo8(-128)
+ 106 00a8 86E0      		ldi r24,lo8(6)
+ 107 00aa 0E94 0000 		call SEV_SEG_writeByte
+ 108               	.LM12:
+ 109 00ae 8701      		movw r16,r14
+ 110 00b0 0550      		subi r16,lo8(-(-5))
+ 111 00b2 1040      		sbci r17,hi8(-(-5))
+ 112 00b4 F801      		movw r30,r16
+ 113 00b6 6081      		ld r22,Z
+ 114 00b8 6295      		swap r22
+ 115 00ba 6F70      		andi r22,lo8(15)
+ 116 00bc 85E0      		ldi r24,lo8(5)
+ 117 00be 0E94 0000 		call SEV_SEG_writeByte
+ 118               	.LM13:
+ 119 00c2 F801      		movw r30,r16
+ 120 00c4 6081      		ld r22,Z
+ 121 00c6 6F70      		andi r22,lo8(15)
+ 122 00c8 6068      		ori r22,lo8(-128)
+ 123 00ca 84E0      		ldi r24,lo8(4)
+ 124 00cc 0E94 0000 		call SEV_SEG_writeByte
+ 125               	.LM14:
+ 126 00d0 8AEF      		ldi r24,lo8(-6)
+ 127 00d2 9FEF      		ldi r25,hi8(-6)
+ 128 00d4 E80E      		add r14,r24
+ 129 00d6 F91E      		adc r15,r25
+ 130 00d8 F701      		movw r30,r14
+ 131 00da 6081      		ld r22,Z
+ 132 00dc 6295      		swap r22
+ 133 00de 6F70      		andi r22,lo8(15)
+ 134 00e0 83E0      		ldi r24,lo8(3)
+ 135 00e2 0E94 0000 		call SEV_SEG_writeByte
+ 136               	.LM15:
+ 137 00e6 F701      		movw r30,r14
+ 138 00e8 6081      		ld r22,Z
+ 139 00ea 6F70      		andi r22,lo8(15)
+ 140 00ec 82E0      		ldi r24,lo8(2)
+ 141 00ee 0E94 0000 		call SEV_SEG_writeByte
+ 142               	.LM16:
+ 143 00f2 6091 0000 		lds r22,tick
+ 144 00f6 81E0      		ldi r24,lo8(1)
+ 145 00f8 0E94 0000 		call SEV_SEG_writeByte
+ 146               	/* epilogue start */
+ 147               	.LM17:
+ 148 00fc 1F91      		pop r17
+ 149 00fe 0F91      		pop r16
+ 150 0100 FF90      		pop r15
+ 151 0102 EF90      		pop r14
+ 152 0104 0895      		ret
+ 153               	.LFE7:
+ 155               		.data
+ 156               	.LC0:
+ 157 0000 0D0A 0A0A 		.string	"\r\n\n\nISO 8601\r\n"
+ 157      4953 4F20 
+ 157      3836 3031 
+ 157      0D0A 00
+ 158               	.LC1:
+ 159 000f 0D00      		.string	"\r"
+ 160               	.LC2:
+ 161 0011 2D00      		.string	"-"
+ 162               	.LC3:
+ 163 0013 2000      		.string	" "
+ 164               	.LC4:
+ 165 0015 3A00      		.string	":"
+ 166               		.text
+ 167               	.global	main
+ 169               	main:
+ 170               	.LFB8:
+ 171               	.LM18:
+ 172 0106 1F93      		push r17
+ 173 0108 CF93      		push r28
+ 174 010a DF93      		push r29
+ 175               	/* prologue: function */
+ 176               	/* frame size = 0 */
+ 177               	.LM19:
+ 178 010c 80E8      		ldi r24,lo8(-128)
+ 179 010e 8093 6100 		sts 97,r24
+ 180               	.LM20:
+ 181 0112 1092 6100 		sts 97,__zero_reg__
+ 182               	.LM21:
+ 183 0116 0E94 0000 		call initUSART
+ 184               	.LM22:
+ 185 011a 80E0      		ldi r24,lo8(.LC0)
+ 186 011c 90E0      		ldi r25,hi8(.LC0)
+ 187 011e 0E94 0000 		call printString
+ 188               	.LM23:
+ 189 0122 81E0      		ldi r24,lo8(1)
+ 190 0124 61E0      		ldi r22,lo8(1)
+ 191 0126 0E94 0000 		call initSPI
+ 192               	.LM24:
+ 193 012a 0E94 0000 		call init_RTC
+ 194               	.LM25:
+ 195 012e 0E94 0000 		call init_SEV_SEG
+ 196               	.LM26:
+ 197 0132 0E94 0000 		call SEV_SEG_startupAni
+ 198               	.LM27:
+ 199 0136 0E94 0000 		call SEV_SEG_allClear
+ 200               	.LM28:
+ 201 013a 5298      		cbi 42-32,2
+ 202               	.LM29:
+ 203 013c 5A9A      		sbi 43-32,2
+ 204               	.LM30:
+ 205               	/* #APP */
+ 206               	 ;  89 "GPSClock.c" 1
+ 207 013e 7894      		sei
+ 208               	 ;  0 "" 2
+ 209               	.LM31:
+ 210               	/* #NOAPP */
+ 211 0140 1AE0      		ldi r17,lo8(10)
+ 212               	.LBB12:
+ 213               	.LBB13:
+ 214               	.LBB14:
+ 215               	.LBB15:
+ 216               	.LM32:
+ 217 0142 C0E2      		ldi r28,lo8(20000)
+ 218 0144 DEE4      		ldi r29,hi8(20000)
+ 219               	.LVL0:
+ 220               	.L10:
+ 221               	.LBE15:
+ 222               	.LBE14:
+ 223               	.LBE13:
+ 224               	.LBE12:
+ 225               	.LM33:
+ 226 0146 80E0      		ldi r24,lo8(time)
+ 227 0148 90E0      		ldi r25,hi8(time)
+ 228               	.LVL1:
+ 229 014a 0E94 0000 		call RTC_getTime
+ 230               	.LM34:
+ 231 014e 80E0      		ldi r24,lo8(.LC1)
+ 232 0150 90E0      		ldi r25,hi8(.LC1)
+ 233 0152 0E94 0000 		call printString
+ 234               	.LM35:
+ 235 0156 8091 0000 		lds r24,time+6
+ 236 015a 2091 0000 		lds r18,time+6
+ 237 015e 2295      		swap r18
+ 238 0160 2F70      		andi r18,lo8(15)
+ 239 0162 219F      		mul r18,r17
+ 240 0164 9001      		movw r18,r0
+ 241 0166 1124      		clr r1
+ 242 0168 8F70      		andi r24,lo8(15)
+ 243 016a 820F      		add r24,r18
+ 244 016c 0E94 0000 		call printByte
+ 245               	.LM36:
+ 246 0170 8091 0000 		lds r24,time+5
+ 247 0174 2091 0000 		lds r18,time+5
+ 248 0178 2295      		swap r18
+ 249 017a 2F70      		andi r18,lo8(15)
+ 250 017c 219F      		mul r18,r17
+ 251 017e 9001      		movw r18,r0
+ 252 0180 1124      		clr r1
+ 253 0182 8F70      		andi r24,lo8(15)
+ 254 0184 820F      		add r24,r18
+ 255 0186 0E94 0000 		call printByte
+ 256               	.LM37:
+ 257 018a 80E0      		ldi r24,lo8(.LC2)
+ 258 018c 90E0      		ldi r25,hi8(.LC2)
+ 259 018e 0E94 0000 		call printString
+ 260               	.LM38:
+ 261 0192 8091 0000 		lds r24,time+4
+ 262 0196 2091 0000 		lds r18,time+4
+ 263 019a 2295      		swap r18
+ 264 019c 2F70      		andi r18,lo8(15)
+ 265 019e 219F      		mul r18,r17
+ 266 01a0 9001      		movw r18,r0
+ 267 01a2 1124      		clr r1
+ 268 01a4 8F70      		andi r24,lo8(15)
+ 269 01a6 820F      		add r24,r18
+ 270 01a8 0E94 0000 		call printByte
+ 271               	.LM39:
+ 272 01ac 80E0      		ldi r24,lo8(.LC2)
+ 273 01ae 90E0      		ldi r25,hi8(.LC2)
+ 274 01b0 0E94 0000 		call printString
+ 275               	.LM40:
+ 276 01b4 8091 0000 		lds r24,time+3
+ 277 01b8 2091 0000 		lds r18,time+3
+ 278 01bc 2295      		swap r18
+ 279 01be 2F70      		andi r18,lo8(15)
+ 280 01c0 219F      		mul r18,r17
+ 281 01c2 9001      		movw r18,r0
+ 282 01c4 1124      		clr r1
+ 283 01c6 8F70      		andi r24,lo8(15)
+ 284 01c8 820F      		add r24,r18
+ 285 01ca 0E94 0000 		call printByte
+ 286               	.LM41:
+ 287 01ce 80E0      		ldi r24,lo8(.LC3)
+ 288 01d0 90E0      		ldi r25,hi8(.LC3)
+ 289 01d2 0E94 0000 		call printString
+ 290               	.LM42:
+ 291 01d6 8091 0000 		lds r24,time+2
+ 292 01da 2091 0000 		lds r18,time+2
+ 293 01de 2295      		swap r18
+ 294 01e0 2F70      		andi r18,lo8(15)
+ 295 01e2 219F      		mul r18,r17
+ 296 01e4 9001      		movw r18,r0
+ 297 01e6 1124      		clr r1
+ 298 01e8 8F70      		andi r24,lo8(15)
+ 299 01ea 820F      		add r24,r18
+ 300 01ec 0E94 0000 		call printByte
+ 301               	.LM43:
+ 302 01f0 80E0      		ldi r24,lo8(.LC4)
+ 303 01f2 90E0      		ldi r25,hi8(.LC4)
+ 304 01f4 0E94 0000 		call printString
+ 305               	.LM44:
+ 306 01f8 8091 0000 		lds r24,time+1
+ 307 01fc 2091 0000 		lds r18,time+1
+ 308 0200 2295      		swap r18
+ 309 0202 2F70      		andi r18,lo8(15)
+ 310 0204 219F      		mul r18,r17
+ 311 0206 9001      		movw r18,r0
+ 312 0208 1124      		clr r1
+ 313 020a 8F70      		andi r24,lo8(15)
+ 314 020c 820F      		add r24,r18
+ 315 020e 0E94 0000 		call printByte
+ 316               	.LM45:
+ 317 0212 80E0      		ldi r24,lo8(.LC4)
+ 318 0214 90E0      		ldi r25,hi8(.LC4)
+ 319 0216 0E94 0000 		call printString
+ 320               	.LM46:
+ 321 021a 8091 0000 		lds r24,time
+ 322 021e 2091 0000 		lds r18,time
+ 323 0222 2295      		swap r18
+ 324 0224 2F70      		andi r18,lo8(15)
+ 325 0226 219F      		mul r18,r17
+ 326 0228 9001      		movw r18,r0
+ 327 022a 1124      		clr r1
+ 328 022c 8F70      		andi r24,lo8(15)
+ 329 022e 820F      		add r24,r18
+ 330 0230 0E94 0000 		call printByte
+ 331               	.LM47:
+ 332 0234 80E0      		ldi r24,lo8(.LC3)
+ 333 0236 90E0      		ldi r25,hi8(.LC3)
+ 334 0238 0E94 0000 		call printString
+ 335               	.LM48:
+ 336 023c 8091 0000 		lds r24,tick
+ 337 0240 0E94 0000 		call printByte
+ 338               	.LM49:
+ 339 0244 80E0      		ldi r24,lo8(.LC3)
+ 340 0246 90E0      		ldi r25,hi8(.LC3)
+ 341 0248 0E94 0000 		call printString
+ 342               	.LM50:
+ 343 024c 0E94 0000 		call refresh_display
+ 344               	.LM51:
+ 345 0250 4A99      		sbic 41-32,2
+ 346 0252 00C0      		rjmp .L10
+ 347               	.LBB19:
+ 348               	.LBB18:
+ 349               	.LBB17:
+ 350               	.LBB16:
+ 351               	.LM52:
+ 352 0254 CE01      		movw r24,r28
+ 353               	.LVL2:
+ 354               	/* #APP */
+ 355               	 ;  105 "g:/projects/winavr-20100110/lib/gcc/../../avr/include/util/delay_basic.h" 1
+ 356 0256 0197      		1: sbiw r24,1
+ 357 0258 01F4      		brne 1b
+ 358               	 ;  0 "" 2
+ 359               	/* #NOAPP */
+ 360               	.LBE16:
+ 361               	.LBE17:
+ 362               	.LBE18:
+ 363               	.LBE19:
+ 364               	.LM53:
+ 365 025a 4A99      		sbic 41-32,2
+ 366 025c 00C0      		rjmp .L10
+ 367               	.LM54:
+ 368 025e 8091 0000 		lds r24,tick
+ 369               	.LVL3:
+ 370 0262 8F5F      		subi r24,lo8(-(1))
+ 371 0264 8093 0000 		sts tick,r24
+ 372 0268 00C0      		rjmp .L5
+ 373               	.L11:
+ 374               	.LM55:
+ 375 026a 80E0      		ldi r24,lo8(time)
+ 376 026c 90E0      		ldi r25,hi8(time)
+ 377 026e 0E94 0000 		call RTC_getTime
+ 378               	.LM56:
+ 379 0272 0E94 0000 		call refresh_display
+ 380               	.L5:
+ 381               	.LM57:
+ 382 0276 4A99      		sbic 41-32,2
+ 383 0278 00C0      		rjmp .L10
+ 384 027a 00C0      		rjmp .L11
+ 385               	.LFE8:
+ 387               	.global	__vector_18
+ 389               	__vector_18:
+ 390               	.LFB6:
+ 391               	.LM58:
+ 392 027c 1F92      		push __zero_reg__
+ 393 027e 0F92      		push r0
+ 394 0280 0FB6      		in r0,__SREG__
+ 395 0282 0F92      		push r0
+ 396 0284 1124      		clr __zero_reg__
+ 397 0286 2F93      		push r18
+ 398 0288 3F93      		push r19
+ 399 028a 4F93      		push r20
+ 400 028c 5F93      		push r21
+ 401 028e 6F93      		push r22
+ 402 0290 7F93      		push r23
+ 403 0292 8F93      		push r24
+ 404 0294 9F93      		push r25
+ 405 0296 AF93      		push r26
+ 406 0298 BF93      		push r27
+ 407 029a EF93      		push r30
+ 408 029c FF93      		push r31
+ 409               	/* prologue: Signal */
+ 410               	/* frame size = 0 */
+ 411               	.LM59:
+ 412 029e 0E94 0000 		call receiveByte
+ 413 02a2 0E94 0000 		call transmitByte
+ 414               	/* epilogue start */
+ 415               	.LM60:
+ 416 02a6 FF91      		pop r31
+ 417 02a8 EF91      		pop r30
+ 418 02aa BF91      		pop r27
+ 419 02ac AF91      		pop r26
+ 420 02ae 9F91      		pop r25
+ 421 02b0 8F91      		pop r24
+ 422 02b2 7F91      		pop r23
+ 423 02b4 6F91      		pop r22
+ 424 02b6 5F91      		pop r21
+ 425 02b8 4F91      		pop r20
+ 426 02ba 3F91      		pop r19
+ 427 02bc 2F91      		pop r18
+ 428 02be 0F90      		pop r0
+ 429 02c0 0FBE      		out __SREG__,r0
+ 430 02c2 0F90      		pop r0
+ 431 02c4 1F90      		pop __zero_reg__
+ 432 02c6 1895      		reti
+ 433               	.LFE6:
+ 435               		.comm tick,1,1
+ 436               		.comm time,7,1
+ 477               	.Letext0:
+DEFINED SYMBOLS
+                            *ABS*:00000000 GPSClock.c
+C:\Users\Jadonis\AppData\Local\Temp/ccy6a6Bv.s:2      *ABS*:0000003f __SREG__
+C:\Users\Jadonis\AppData\Local\Temp/ccy6a6Bv.s:3      *ABS*:0000003e __SP_H__
+C:\Users\Jadonis\AppData\Local\Temp/ccy6a6Bv.s:4      *ABS*:0000003d __SP_L__
+C:\Users\Jadonis\AppData\Local\Temp/ccy6a6Bv.s:5      *ABS*:00000034 __CCP__
+C:\Users\Jadonis\AppData\Local\Temp/ccy6a6Bv.s:6      *ABS*:00000000 __tmp_reg__
+C:\Users\Jadonis\AppData\Local\Temp/ccy6a6Bv.s:7      *ABS*:00000001 __zero_reg__
+C:\Users\Jadonis\AppData\Local\Temp/ccy6a6Bv.s:18     .text:00000000 refresh_display
+                            *COM*:00000007 time
+                            *COM*:00000001 tick
+C:\Users\Jadonis\AppData\Local\Temp/ccy6a6Bv.s:169    .text:00000106 main
+C:\Users\Jadonis\AppData\Local\Temp/ccy6a6Bv.s:389    .text:0000027c __vector_18
+
+UNDEFINED SYMBOLS
+SEV_SEG_writeByte
+initUSART
+printString
+initSPI
+init_RTC
+init_SEV_SEG
+SEV_SEG_startupAni
+SEV_SEG_allClear
+RTC_getTime
+printByte
+receiveByte
+transmitByte
+__do_copy_data
+__do_clear_bss

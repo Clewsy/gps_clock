@@ -1,0 +1,5 @@
+MAX7219.o: MAX7219.c SPI.h MAX7219.h
+
+SPI.h:
+
+MAX7219.h:

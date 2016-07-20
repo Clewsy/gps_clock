@@ -1,0 +1,900 @@
+
+GPSClock.elf:     file format elf32-avr
+
+Sections:
+Idx Name          Size      VMA       LMA       File off  Algn
+  0 .data         0000001a  00800100  00000480  000004f4  2**0
+                  CONTENTS, ALLOC, LOAD, DATA
+  1 .text         00000480  00000000  00000000  00000074  2**1
+                  CONTENTS, ALLOC, LOAD, READONLY, CODE
+  2 .debug_aranges 000000a0  00000000  00000000  0000050e  2**0
+                  CONTENTS, READONLY, DEBUGGING
+  3 .debug_pubnames 00000179  00000000  00000000  000005ae  2**0
+                  CONTENTS, READONLY, DEBUGGING
+  4 .debug_info   0000074e  00000000  00000000  00000727  2**0
+                  CONTENTS, READONLY, DEBUGGING
+  5 .debug_abbrev 00000432  00000000  00000000  00000e75  2**0
+                  CONTENTS, READONLY, DEBUGGING
+  6 .debug_line   00000845  00000000  00000000  000012a7  2**0
+                  CONTENTS, READONLY, DEBUGGING
+  7 .debug_frame  00000160  00000000  00000000  00001aec  2**2
+                  CONTENTS, READONLY, DEBUGGING
+  8 .debug_str    0000022d  00000000  00000000  00001c4c  2**0
+                  CONTENTS, READONLY, DEBUGGING
+  9 .debug_loc    0000017a  00000000  00000000  00001e79  2**0
+                  CONTENTS, READONLY, DEBUGGING
+ 10 .debug_ranges 000000d8  00000000  00000000  00001ff3  2**0
+                  CONTENTS, READONLY, DEBUGGING
+
+Disassembly of section .text:
+
+00000000 <__vectors>:
+   0:	0c 94 34 00 	jmp	0x68	; 0x68 <__ctors_end>
+   4:	0c 94 49 00 	jmp	0x92	; 0x92 <__bad_interrupt>
+   8:	0c 94 49 00 	jmp	0x92	; 0x92 <__bad_interrupt>
+   c:	0c 94 49 00 	jmp	0x92	; 0x92 <__bad_interrupt>
+  10:	0c 94 49 00 	jmp	0x92	; 0x92 <__bad_interrupt>
+  14:	0c 94 49 00 	jmp	0x92	; 0x92 <__bad_interrupt>
+  18:	0c 94 49 00 	jmp	0x92	; 0x92 <__bad_interrupt>
+  1c:	0c 94 49 00 	jmp	0x92	; 0x92 <__bad_interrupt>
+  20:	0c 94 49 00 	jmp	0x92	; 0x92 <__bad_interrupt>
+  24:	0c 94 49 00 	jmp	0x92	; 0x92 <__bad_interrupt>
+  28:	0c 94 49 00 	jmp	0x92	; 0x92 <__bad_interrupt>
+  2c:	0c 94 49 00 	jmp	0x92	; 0x92 <__bad_interrupt>
+  30:	0c 94 49 00 	jmp	0x92	; 0x92 <__bad_interrupt>
+  34:	0c 94 49 00 	jmp	0x92	; 0x92 <__bad_interrupt>
+  38:	0c 94 49 00 	jmp	0x92	; 0x92 <__bad_interrupt>
+  3c:	0c 94 49 00 	jmp	0x92	; 0x92 <__bad_interrupt>
+  40:	0c 94 49 00 	jmp	0x92	; 0x92 <__bad_interrupt>
+  44:	0c 94 49 00 	jmp	0x92	; 0x92 <__bad_interrupt>
+  48:	0c 94 e5 00 	jmp	0x1ca	; 0x1ca <__vector_18>
+  4c:	0c 94 49 00 	jmp	0x92	; 0x92 <__bad_interrupt>
+  50:	0c 94 49 00 	jmp	0x92	; 0x92 <__bad_interrupt>
+  54:	0c 94 49 00 	jmp	0x92	; 0x92 <__bad_interrupt>
+  58:	0c 94 49 00 	jmp	0x92	; 0x92 <__bad_interrupt>
+  5c:	0c 94 49 00 	jmp	0x92	; 0x92 <__bad_interrupt>
+  60:	0c 94 49 00 	jmp	0x92	; 0x92 <__bad_interrupt>
+  64:	0c 94 49 00 	jmp	0x92	; 0x92 <__bad_interrupt>
+
+00000068 <__ctors_end>:
+  68:	11 24       	eor	r1, r1
+  6a:	1f be       	out	0x3f, r1	; 63
+  6c:	cf ef       	ldi	r28, 0xFF	; 255
+  6e:	d8 e0       	ldi	r29, 0x08	; 8
+  70:	de bf       	out	0x3e, r29	; 62
+  72:	cd bf       	out	0x3d, r28	; 61
+
+00000074 <__do_copy_data>:
+  74:	11 e0       	ldi	r17, 0x01	; 1
+  76:	a0 e0       	ldi	r26, 0x00	; 0
+  78:	b1 e0       	ldi	r27, 0x01	; 1
+  7a:	e0 e8       	ldi	r30, 0x80	; 128
+  7c:	f4 e0       	ldi	r31, 0x04	; 4
+  7e:	02 c0       	rjmp	.+4      	; 0x84 <.do_copy_data_start>
+
+00000080 <.do_copy_data_loop>:
+  80:	05 90       	lpm	r0, Z+
+  82:	0d 92       	st	X+, r0
+
+00000084 <.do_copy_data_start>:
+  84:	aa 31       	cpi	r26, 0x1A	; 26
+  86:	b1 07       	cpc	r27, r17
+  88:	d9 f7       	brne	.-10     	; 0x80 <.do_copy_data_loop>
+  8a:	0e 94 4b 00 	call	0x96	; 0x96 <main>
+  8e:	0c 94 3e 02 	jmp	0x47c	; 0x47c <_exit>
+
+00000092 <__bad_interrupt>:
+  92:	0c 94 00 00 	jmp	0	; 0x0 <__vectors>
+
+00000096 <main>:
+	transmitByte(receiveByte());	//Echos received byte.
+
+}
+
+
+int main(void) {
+  96:	cf 92       	push	r12
+  98:	df 92       	push	r13
+  9a:	ef 92       	push	r14
+  9c:	ff 92       	push	r15
+  9e:	1f 93       	push	r17
+  a0:	df 93       	push	r29
+  a2:	cf 93       	push	r28
+  a4:	cd b7       	in	r28, 0x3d	; 61
+  a6:	de b7       	in	r29, 0x3e	; 62
+  a8:	29 97       	sbiw	r28, 0x09	; 9
+  aa:	0f b6       	in	r0, 0x3f	; 63
+  ac:	f8 94       	cli
+  ae:	de bf       	out	0x3e, r29	; 62
+  b0:	0f be       	out	0x3f, r0	; 63
+  b2:	cd bf       	out	0x3d, r28	; 61
+	
+	//sei();			//Global enable interrupts (from avr/interrupt.h)
+	initUSART();	//Initialises the USART for receive/transmit data, 8-bit with 1 stop bit.
+  b4:	0e 94 0b 01 	call	0x216	; 0x216 <initUSART>
+	printString("\r\nGame over man.\r\n\n");
+  b8:	80 e0       	ldi	r24, 0x00	; 0
+  ba:	91 e0       	ldi	r25, 0x01	; 1
+  bc:	0e 94 22 01 	call	0x244	; 0x244 <printString>
+
+	initSPI(SPI_POL, SPI_PHA);	//Initialise SPI for RTC - mode 3 (compatible mode 1 or 3) - Polarity=0, Phase=1 and slave select on PB2
+  c0:	81 e0       	ldi	r24, 0x01	; 1
+  c2:	61 e0       	ldi	r22, 0x01	; 1
+  c4:	0e 94 4d 01 	call	0x29a	; 0x29a <initSPI>
+
+	init_RTC();
+  c8:	0e 94 6b 01 	call	0x2d6	; 0x2d6 <init_RTC>
+
+	RTC_SPI_writeByte(RTC_SECR_WA, INT_TO_BCD(55)); //Set Seconds
+  cc:	80 e8       	ldi	r24, 0x80	; 128
+  ce:	65 e5       	ldi	r22, 0x55	; 85
+  d0:	0e 94 6e 01 	call	0x2dc	; 0x2dc <RTC_SPI_writeByte>
+	RTC_SPI_writeByte(RTC_MINR_WA, INT_TO_BCD(59)); //Set minutes
+  d4:	81 e8       	ldi	r24, 0x81	; 129
+  d6:	69 e5       	ldi	r22, 0x59	; 89
+  d8:	0e 94 6e 01 	call	0x2dc	; 0x2dc <RTC_SPI_writeByte>
+	RTC_SPI_writeByte(RTC_HRR_WA, INT_TO_BCD(12)); //Set hours
+  dc:	82 e8       	ldi	r24, 0x82	; 130
+  de:	62 e1       	ldi	r22, 0x12	; 18
+  e0:	0e 94 6e 01 	call	0x2dc	; 0x2dc <RTC_SPI_writeByte>
+
+	//initSPI(SEV_SEG_LOAD, SEV_SEG_POL, SEV_SEG_PHA); //Initialise SPI settings for use with MAX7219 seven segment displays driver.
+	init_SEV_SEG();
+  e4:	0e 94 1f 02 	call	0x43e	; 0x43e <init_SEV_SEG>
+	SEV_SEG_startupAni();
+  e8:	0e 94 e1 01 	call	0x3c2	; 0x3c2 <SEV_SEG_startupAni>
+	SEV_SEG_allClear();
+  ec:	0e 94 d7 01 	call	0x3ae	; 0x3ae <SEV_SEG_allClear>
+	struct RTC_Data RTC_time;
+	
+	while (1)
+	{	
+
+		RTC_getTime(&RTC_time);	//Refresh time data
+  f0:	6e 01       	movw	r12, r28
+  f2:	08 94       	sec
+  f4:	c1 1c       	adc	r12, r1
+  f6:	d1 1c       	adc	r13, r1
+
+		printString("\r");
+		printByte(BCD_TO_INT(RTC_time.hours));
+  f8:	1a e0       	ldi	r17, 0x0A	; 10
+    milliseconds can be achieved.
+ */
+void
+_delay_loop_2(uint16_t __count)
+{
+	__asm__ volatile (
+  fa:	84 ed       	ldi	r24, 0xD4	; 212
+  fc:	e8 2e       	mov	r14, r24
+  fe:	80 e3       	ldi	r24, 0x30	; 48
+ 100:	f8 2e       	mov	r15, r24
+	struct RTC_Data RTC_time;
+	
+	while (1)
+	{	
+
+		RTC_getTime(&RTC_time);	//Refresh time data
+ 102:	c6 01       	movw	r24, r12
+ 104:	0e 94 82 01 	call	0x304	; 0x304 <RTC_getTime>
+
+		printString("\r");
+ 108:	84 e1       	ldi	r24, 0x14	; 20
+ 10a:	91 e0       	ldi	r25, 0x01	; 1
+ 10c:	0e 94 22 01 	call	0x244	; 0x244 <printString>
+		printByte(BCD_TO_INT(RTC_time.hours));
+ 110:	8b 81       	ldd	r24, Y+3	; 0x03
+ 112:	28 2f       	mov	r18, r24
+ 114:	22 95       	swap	r18
+ 116:	2f 70       	andi	r18, 0x0F	; 15
+ 118:	21 9f       	mul	r18, r17
+ 11a:	90 01       	movw	r18, r0
+ 11c:	11 24       	eor	r1, r1
+ 11e:	8f 70       	andi	r24, 0x0F	; 15
+ 120:	82 0f       	add	r24, r18
+ 122:	0e 94 33 01 	call	0x266	; 0x266 <printByte>
+		printString(":");
+ 126:	86 e1       	ldi	r24, 0x16	; 22
+ 128:	91 e0       	ldi	r25, 0x01	; 1
+ 12a:	0e 94 22 01 	call	0x244	; 0x244 <printString>
+		printByte(BCD_TO_INT(RTC_time.minutes));
+ 12e:	8a 81       	ldd	r24, Y+2	; 0x02
+ 130:	28 2f       	mov	r18, r24
+ 132:	22 95       	swap	r18
+ 134:	2f 70       	andi	r18, 0x0F	; 15
+ 136:	21 9f       	mul	r18, r17
+ 138:	90 01       	movw	r18, r0
+ 13a:	11 24       	eor	r1, r1
+ 13c:	8f 70       	andi	r24, 0x0F	; 15
+ 13e:	82 0f       	add	r24, r18
+ 140:	0e 94 33 01 	call	0x266	; 0x266 <printByte>
+		printString(":");
+ 144:	86 e1       	ldi	r24, 0x16	; 22
+ 146:	91 e0       	ldi	r25, 0x01	; 1
+ 148:	0e 94 22 01 	call	0x244	; 0x244 <printString>
+		printByte(BCD_TO_INT(RTC_time.seconds));
+ 14c:	89 81       	ldd	r24, Y+1	; 0x01
+ 14e:	28 2f       	mov	r18, r24
+ 150:	22 95       	swap	r18
+ 152:	2f 70       	andi	r18, 0x0F	; 15
+ 154:	21 9f       	mul	r18, r17
+ 156:	90 01       	movw	r18, r0
+ 158:	11 24       	eor	r1, r1
+ 15a:	8f 70       	andi	r24, 0x0F	; 15
+ 15c:	82 0f       	add	r24, r18
+ 15e:	0e 94 33 01 	call	0x266	; 0x266 <printByte>
+		printString(" ");
+ 162:	88 e1       	ldi	r24, 0x18	; 24
+ 164:	91 e0       	ldi	r25, 0x01	; 1
+ 166:	0e 94 22 01 	call	0x244	; 0x244 <printString>
+
+
+
+
+
+	SEV_SEG_writeByte(SEV_SEG_DIGIT_7, ((RTC_time.day) >> 4));
+ 16a:	6d 81       	ldd	r22, Y+5	; 0x05
+ 16c:	62 95       	swap	r22
+ 16e:	6f 70       	andi	r22, 0x0F	; 15
+ 170:	88 e0       	ldi	r24, 0x08	; 8
+ 172:	0e 94 c2 01 	call	0x384	; 0x384 <SEV_SEG_writeByte>
+	SEV_SEG_writeByte(SEV_SEG_DIGIT_6, ((RTC_time.day) & 0b00001111));
+ 176:	6d 81       	ldd	r22, Y+5	; 0x05
+ 178:	6f 70       	andi	r22, 0x0F	; 15
+ 17a:	87 e0       	ldi	r24, 0x07	; 7
+ 17c:	0e 94 c2 01 	call	0x384	; 0x384 <SEV_SEG_writeByte>
+	SEV_SEG_writeByte(SEV_SEG_DIGIT_5, ((RTC_time.hours) >> 4));
+ 180:	6b 81       	ldd	r22, Y+3	; 0x03
+ 182:	62 95       	swap	r22
+ 184:	6f 70       	andi	r22, 0x0F	; 15
+ 186:	86 e0       	ldi	r24, 0x06	; 6
+ 188:	0e 94 c2 01 	call	0x384	; 0x384 <SEV_SEG_writeByte>
+	SEV_SEG_writeByte(SEV_SEG_DIGIT_4, ((RTC_time.hours) & 0b00001111));
+ 18c:	6b 81       	ldd	r22, Y+3	; 0x03
+ 18e:	6f 70       	andi	r22, 0x0F	; 15
+ 190:	85 e0       	ldi	r24, 0x05	; 5
+ 192:	0e 94 c2 01 	call	0x384	; 0x384 <SEV_SEG_writeByte>
+	
+	SEV_SEG_writeByte(SEV_SEG_DIGIT_3, ((RTC_time.minutes) >> 4));
+ 196:	6a 81       	ldd	r22, Y+2	; 0x02
+ 198:	62 95       	swap	r22
+ 19a:	6f 70       	andi	r22, 0x0F	; 15
+ 19c:	84 e0       	ldi	r24, 0x04	; 4
+ 19e:	0e 94 c2 01 	call	0x384	; 0x384 <SEV_SEG_writeByte>
+	SEV_SEG_writeByte(SEV_SEG_DIGIT_2, ((RTC_time.minutes) & 0b00001111));
+ 1a2:	6a 81       	ldd	r22, Y+2	; 0x02
+ 1a4:	6f 70       	andi	r22, 0x0F	; 15
+ 1a6:	83 e0       	ldi	r24, 0x03	; 3
+ 1a8:	0e 94 c2 01 	call	0x384	; 0x384 <SEV_SEG_writeByte>
+	SEV_SEG_writeByte(SEV_SEG_DIGIT_1, ((RTC_time.seconds) >> 4));
+ 1ac:	69 81       	ldd	r22, Y+1	; 0x01
+ 1ae:	62 95       	swap	r22
+ 1b0:	6f 70       	andi	r22, 0x0F	; 15
+ 1b2:	82 e0       	ldi	r24, 0x02	; 2
+ 1b4:	0e 94 c2 01 	call	0x384	; 0x384 <SEV_SEG_writeByte>
+	SEV_SEG_writeByte(SEV_SEG_DIGIT_0, ((RTC_time.seconds) & 0b00001111));
+ 1b8:	69 81       	ldd	r22, Y+1	; 0x01
+ 1ba:	6f 70       	andi	r22, 0x0F	; 15
+ 1bc:	81 e0       	ldi	r24, 0x01	; 1
+ 1be:	0e 94 c2 01 	call	0x384	; 0x384 <SEV_SEG_writeByte>
+ 1c2:	c7 01       	movw	r24, r14
+ 1c4:	01 97       	sbiw	r24, 0x01	; 1
+ 1c6:	f1 f7       	brne	.-4      	; 0x1c4 <main+0x12e>
+ 1c8:	9c cf       	rjmp	.-200    	; 0x102 <main+0x6c>
+
+000001ca <__vector_18>:
+
+//Set polarity and phase for SPI communications.  Fortunately RTC and Seven Seg display driver both work in mode 3 so do not have to switch between modes, only have to initialise SPI once..
+#define	SPI_POL	1	//Define the polarity setting when initialising SPI
+#define SPI_PHA	1	//Define the phase setting when initialising SPI
+
+ISR(USART_RX_vect)	{				//Interrupt subroutine triggered when the USART receives a byte.
+ 1ca:	1f 92       	push	r1
+ 1cc:	0f 92       	push	r0
+ 1ce:	0f b6       	in	r0, 0x3f	; 63
+ 1d0:	0f 92       	push	r0
+ 1d2:	11 24       	eor	r1, r1
+ 1d4:	2f 93       	push	r18
+ 1d6:	3f 93       	push	r19
+ 1d8:	4f 93       	push	r20
+ 1da:	5f 93       	push	r21
+ 1dc:	6f 93       	push	r22
+ 1de:	7f 93       	push	r23
+ 1e0:	8f 93       	push	r24
+ 1e2:	9f 93       	push	r25
+ 1e4:	af 93       	push	r26
+ 1e6:	bf 93       	push	r27
+ 1e8:	ef 93       	push	r30
+ 1ea:	ff 93       	push	r31
+	
+	transmitByte(receiveByte());	//Echos received byte.
+ 1ec:	0e 94 1c 01 	call	0x238	; 0x238 <receiveByte>
+ 1f0:	0e 94 1f 01 	call	0x23e	; 0x23e <transmitByte>
+
+}
+ 1f4:	ff 91       	pop	r31
+ 1f6:	ef 91       	pop	r30
+ 1f8:	bf 91       	pop	r27
+ 1fa:	af 91       	pop	r26
+ 1fc:	9f 91       	pop	r25
+ 1fe:	8f 91       	pop	r24
+ 200:	7f 91       	pop	r23
+ 202:	6f 91       	pop	r22
+ 204:	5f 91       	pop	r21
+ 206:	4f 91       	pop	r20
+ 208:	3f 91       	pop	r19
+ 20a:	2f 91       	pop	r18
+ 20c:	0f 90       	pop	r0
+ 20e:	0f be       	out	0x3f, r0	; 63
+ 210:	0f 90       	pop	r0
+ 212:	1f 90       	pop	r1
+ 214:	18 95       	reti
+
+00000216 <initUSART>:
+#include <USART.h>			//Needed for definitions in this c file. Must be called before util/setbaud.h as contains BAUD definition
+#include <util/setbaud.h>	//Used to caluculate Usart Baud Rate Register (High and Low) values as a function of F_CPU defined in the makefile abd BAUD defined
+
+void initUSART(void) {		//Initialise the USART peripheral
+							//Utilising USART0
+	UBRR0H = UBRRH_VALUE;	//USART Baud Rate Register High -Value defined in util/setbaud.h
+ 216:	10 92 c5 00 	sts	0x00C5, r1
+	UBRR0L = UBRRL_VALUE;	//USART Baud Rate Register Low  -Value defined in util/setbaud.h
+ 21a:	8c e0       	ldi	r24, 0x0C	; 12
+ 21c:	80 93 c4 00 	sts	0x00C4, r24
+
+	#if USE_2X						//Double-Speed detemined in util/setbaud.h.  Needed is defined BAUD not achieavable without U2X0 
+		UCSR0A |= (1 << U2X0);		//UCSR0A = USART 0 Control and Status Register A
+ 220:	e0 ec       	ldi	r30, 0xC0	; 192
+ 222:	f0 e0       	ldi	r31, 0x00	; 0
+ 224:	80 81       	ld	r24, Z
+ 226:	82 60       	ori	r24, 0x02	; 2
+ 228:	80 83       	st	Z, r24
+	#else							//U2X0 = Double USART 0 Transmission Speed Enable
+		UCSR0A &= ~(1 << U2X0);
+	#endif
+	
+	UCSR0B = (1 << RXCIE0) | (1 << TXEN0) | (1 << RXEN0);		//UCSR0B = USART 0 Control and Status Register B
+ 22a:	88 e9       	ldi	r24, 0x98	; 152
+ 22c:	80 93 c1 00 	sts	0x00C1, r24
+																//RXCIE0 = USART 0 RX Complete Interrupt Enable
+																//TXEN0 = Transmit Enable USART0
+																//RXEN0 = Receive Enable USART0
+	UCSR0C = (1 << UCSZ01) | (1 << UCSZ00);					//UCSR0C = USART 0 Control and Status Register C
+ 230:	86 e0       	ldi	r24, 0x06	; 6
+ 232:	80 93 c2 00 	sts	0x00C2, r24
+																//UCSZ02:0 = Usart Character Size, Set to 0b011 for 8-bit.
+																//(USBS = Usart Stop Bit Select, Stays at 0b0 for 1 stop bit)
+}
+ 236:	08 95       	ret
+
+00000238 <receiveByte>:
+
+
+uint8_t receiveByte(void) {	//Sets a variable to whatever was received by the USART
+
+	return UDR0;			//Returns received data.  UDR0 = USART 0 Data Register
+ 238:	80 91 c6 00 	lds	r24, 0x00C6
+}
+ 23c:	08 95       	ret
+
+0000023e <transmitByte>:
+
+
+void transmitByte(uint8_t data) {	//Transmits a byte from the USART
+
+	UDR0 = data;					//UDR0 = USART 0 Data Register
+ 23e:	80 93 c6 00 	sts	0x00C6, r24
+}
+ 242:	08 95       	ret
+
+00000244 <printString>:
+
+
+void printString(const char string[]) {			//Transmits a string of characters.
+ 244:	ac 01       	movw	r20, r24
+ 246:	20 e0       	ldi	r18, 0x00	; 0
+ 248:	07 c0       	rjmp	.+14     	; 0x258 <printString+0x14>
+
+	uint8_t i = 0;								//Counter to increment for every character in the string.
+	while ((string[i]) != '\0')	{			//Until null character (end of string).
+		while (!(UCSR0A & (1 << UDRE0))) {}	//Wait until the USART 0 data register is empty (ready to transmit). Otherwise operates too fast and drops characters.
+ 24a:	80 91 c0 00 	lds	r24, 0x00C0
+ 24e:	85 ff       	sbrs	r24, 5
+ 250:	fc cf       	rjmp	.-8      	; 0x24a <printString+0x6>
+}
+
+
+void transmitByte(uint8_t data) {	//Transmits a byte from the USART
+
+	UDR0 = data;					//UDR0 = USART 0 Data Register
+ 252:	e0 93 c6 00 	sts	0x00C6, r30
+
+	uint8_t i = 0;								//Counter to increment for every character in the string.
+	while ((string[i]) != '\0')	{			//Until null character (end of string).
+		while (!(UCSR0A & (1 << UDRE0))) {}	//Wait until the USART 0 data register is empty (ready to transmit). Otherwise operates too fast and drops characters.
+		transmitByte(string[i]);				//UCSR0A = USART 0 Control and Status Register A
+		i++;									//UDRE0 = USART 0 Data Register Empty Flag
+ 256:	2f 5f       	subi	r18, 0xFF	; 255
+
+
+void printString(const char string[]) {			//Transmits a string of characters.
+
+	uint8_t i = 0;								//Counter to increment for every character in the string.
+	while ((string[i]) != '\0')	{			//Until null character (end of string).
+ 258:	fa 01       	movw	r30, r20
+ 25a:	e2 0f       	add	r30, r18
+ 25c:	f1 1d       	adc	r31, r1
+ 25e:	e0 81       	ld	r30, Z
+ 260:	ee 23       	and	r30, r30
+ 262:	99 f7       	brne	.-26     	; 0x24a <printString+0x6>
+		while (!(UCSR0A & (1 << UDRE0))) {}	//Wait until the USART 0 data register is empty (ready to transmit). Otherwise operates too fast and drops characters.
+		transmitByte(string[i]);				//UCSR0A = USART 0 Control and Status Register A
+		i++;									//UDRE0 = USART 0 Data Register Empty Flag
+	}
+}
+ 264:	08 95       	ret
+
+00000266 <printByte>:
+
+
+void printByte(uint8_t byte) {				//Takes an integer and transmits the characters
+ 266:	28 2f       	mov	r18, r24
+											//(modified to only print last 2 digits (tens & ones)).
+	//while (!(UCSR0A & (1 << UDRE0))) {}	//Wait until the USART 0 data register is empty (ready to transmit).
+	//transmitByte('0'+ (byte/100));		//Hundreds
+	while (!(UCSR0A & (1 << UDRE0))) {}	//Wait until the USART 0 data register is empty (ready to transmit).
+ 268:	80 91 c0 00 	lds	r24, 0x00C0
+ 26c:	85 ff       	sbrs	r24, 5
+ 26e:	fc cf       	rjmp	.-8      	; 0x268 <printByte+0x2>
+	transmitByte('0'+ ((byte/10) % 10));	//Tens
+ 270:	82 2f       	mov	r24, r18
+ 272:	6a e0       	ldi	r22, 0x0A	; 10
+ 274:	0e 94 32 02 	call	0x464	; 0x464 <__udivmodqi4>
+ 278:	0e 94 32 02 	call	0x464	; 0x464 <__udivmodqi4>
+ 27c:	90 5d       	subi	r25, 0xD0	; 208
+}
+
+
+void transmitByte(uint8_t data) {	//Transmits a byte from the USART
+
+	UDR0 = data;					//UDR0 = USART 0 Data Register
+ 27e:	90 93 c6 00 	sts	0x00C6, r25
+											//(modified to only print last 2 digits (tens & ones)).
+	//while (!(UCSR0A & (1 << UDRE0))) {}	//Wait until the USART 0 data register is empty (ready to transmit).
+	//transmitByte('0'+ (byte/100));		//Hundreds
+	while (!(UCSR0A & (1 << UDRE0))) {}	//Wait until the USART 0 data register is empty (ready to transmit).
+	transmitByte('0'+ ((byte/10) % 10));	//Tens
+	while (!(UCSR0A & (1 << UDRE0))) {}	//Wait until the USART 0 data register is empty (ready to transmit).
+ 282:	80 91 c0 00 	lds	r24, 0x00C0
+ 286:	85 ff       	sbrs	r24, 5
+ 288:	fc cf       	rjmp	.-8      	; 0x282 <printByte+0x1c>
+	transmitByte('0'+ (byte % 10));		//Ones
+ 28a:	82 2f       	mov	r24, r18
+ 28c:	6a e0       	ldi	r22, 0x0A	; 10
+ 28e:	0e 94 32 02 	call	0x464	; 0x464 <__udivmodqi4>
+ 292:	90 5d       	subi	r25, 0xD0	; 208
+}
+
+
+void transmitByte(uint8_t data) {	//Transmits a byte from the USART
+
+	UDR0 = data;					//UDR0 = USART 0 Data Register
+ 294:	90 93 c6 00 	sts	0x00C6, r25
+	//transmitByte('0'+ (byte/100));		//Hundreds
+	while (!(UCSR0A & (1 << UDRE0))) {}	//Wait until the USART 0 data register is empty (ready to transmit).
+	transmitByte('0'+ ((byte/10) % 10));	//Tens
+	while (!(UCSR0A & (1 << UDRE0))) {}	//Wait until the USART 0 data register is empty (ready to transmit).
+	transmitByte('0'+ (byte % 10));		//Ones
+ 298:	08 95       	ret
+
+0000029a <initSPI>:
+#include <SPI.h>
+
+
+void initSPI(uint8_t polarity, uint8_t phase) {	//Will initioalise SPI hardware as master device and frequency/16 then enable.
+
+	SPI_DDR |= (1 << SPI_MOSI);		//MOSI - Output on MOSI
+ 29a:	23 9a       	sbi	0x04, 3	; 4
+	SPI_PORT |= (1 << SPI_MISO);	 	//MISO - Left set as an input but pullup activated
+ 29c:	2c 9a       	sbi	0x05, 4	; 5
+	SPI_DDR |= (1 << SPI_SCK);			//SCK - Output on SCK
+ 29e:	25 9a       	sbi	0x04, 5	; 4
+	SPI_DDR |= (1 << PB2);				//PB2 on AVR is designated SS but any I/O pin can be used, the designation is really for when AVR
+ 2a0:	22 9a       	sbi	0x04, 2	; 4
+										//	SPI acts in slave mode.  HOWEVER must always set PB2 to output even if alternate I/O pin is in
+										//	use otherwise AVR defers to other uCUs as per multimaster setup.
+	
+	//SPCR = SPI Control Register
+	SPCR |= (1 << SPR1);	//Div 16, safer for breadboards (Slower SPI frequency to reduce chance of interference)
+ 2a2:	9c b5       	in	r25, 0x2c	; 44
+ 2a4:	92 60       	ori	r25, 0x02	; 2
+ 2a6:	9c bd       	out	0x2c, r25	; 44
+	SPCR |= (1 << MSTR);	//Clockmaster
+ 2a8:	9c b5       	in	r25, 0x2c	; 44
+ 2aa:	90 61       	ori	r25, 0x10	; 16
+ 2ac:	9c bd       	out	0x2c, r25	; 44
+	SPCR |= (1 << SPE);	//Enable SPI
+ 2ae:	9c b5       	in	r25, 0x2c	; 44
+ 2b0:	90 64       	ori	r25, 0x40	; 64
+ 2b2:	9c bd       	out	0x2c, r25	; 44
+	
+	//Set Polarity/Phase Mode to 3 for RTC
+	SPCR |= (polarity << CPOL);	//CPOL = SPI Clock Polarity, 0 for Clock Idles Low, 1 for clock idles high
+ 2b4:	9c b5       	in	r25, 0x2c	; 44
+ 2b6:	88 0f       	add	r24, r24
+ 2b8:	88 0f       	add	r24, r24
+ 2ba:	88 0f       	add	r24, r24
+ 2bc:	98 2b       	or	r25, r24
+ 2be:	9c bd       	out	0x2c, r25	; 44
+	SPCR |= (phase << CPHA);		//CPHA = SPI Clock Phase, 1 for Data Sampled on Falling Edge, 0 for Rising Edge
+ 2c0:	8c b5       	in	r24, 0x2c	; 44
+ 2c2:	66 0f       	add	r22, r22
+ 2c4:	66 0f       	add	r22, r22
+ 2c6:	86 2b       	or	r24, r22
+ 2c8:	8c bd       	out	0x2c, r24	; 44
+}
+ 2ca:	08 95       	ret
+
+000002cc <SPI_tradeByte>:
+
+void SPI_tradeByte(uint8_t byte) {
+	
+	SPDR = byte; 						//SPI starts sending immediately.  SPDR=SPI Data Register
+ 2cc:	8e bd       	out	0x2e, r24	; 46
+	while(!(SPSR & (1 << SPIF))) {}	//Wait until SPIF (SPI Interrupt Flag) in the SPSR (SPI Status Register) is set indication transfer is complete
+ 2ce:	0d b4       	in	r0, 0x2d	; 45
+ 2d0:	07 fe       	sbrs	r0, 7
+ 2d2:	fd cf       	rjmp	.-6      	; 0x2ce <SPI_tradeByte+0x2>
+	//SPDR now contains the received byte
+}
+ 2d4:	08 95       	ret
+
+000002d6 <init_RTC>:
+#include <DS3234RTC.h>
+#include <SPI.h>
+
+void init_RTC (void)
+{
+	SPI_DDR |= (1 << RTC_SS);	//Set slave select pin on uMC as an output.
+ 2d6:	22 9a       	sbi	0x04, 2	; 4
+	PORTB |= (1 << RTC_SS);	//Start SS off not selected (i.e. high as SS is inverted)
+ 2d8:	2a 9a       	sbi	0x05, 2	; 5
+}
+ 2da:	08 95       	ret
+
+000002dc <RTC_SPI_writeByte>:
+	return(SPDR);				//Return the byte.  SPDR=SPI Data Register
+}
+
+
+void RTC_SPI_writeByte(uint8_t address, uint8_t data) //Writes a byte to the desired address
+{
+ 2dc:	1f 93       	push	r17
+ 2de:	16 2f       	mov	r17, r22
+	SLAVE_SELECT_RTC;			//Enable the RTC comms
+ 2e0:	2a 98       	cbi	0x05, 2	; 5
+	SPI_tradeByte(address);		//Send the address to be written to
+ 2e2:	0e 94 66 01 	call	0x2cc	; 0x2cc <SPI_tradeByte>
+	SPI_tradeByte(data);		//Send the data to be written to address
+ 2e6:	81 2f       	mov	r24, r17
+ 2e8:	0e 94 66 01 	call	0x2cc	; 0x2cc <SPI_tradeByte>
+	SLAVE_DESELECT_RTC;			//Disable the RTC comms
+ 2ec:	2a 9a       	sbi	0x05, 2	; 5
+}
+ 2ee:	1f 91       	pop	r17
+ 2f0:	08 95       	ret
+
+000002f2 <RTC_SPI_readByte>:
+	PORTB |= (1 << RTC_SS);	//Start SS off not selected (i.e. high as SS is inverted)
+}
+
+uint8_t RTC_SPI_readByte(uint8_t address) //Reads and returns a byte at the desired address
+{
+	SLAVE_SELECT_RTC;			//Enable the RTC comms
+ 2f2:	2a 98       	cbi	0x05, 2	; 5
+	SPI_tradeByte(address);		//Send the address to be read from
+ 2f4:	0e 94 66 01 	call	0x2cc	; 0x2cc <SPI_tradeByte>
+	SPI_tradeByte(0);			//Send dummy byte to load SPDR with byte at address
+ 2f8:	80 e0       	ldi	r24, 0x00	; 0
+ 2fa:	0e 94 66 01 	call	0x2cc	; 0x2cc <SPI_tradeByte>
+	SLAVE_DESELECT_RTC;			//Disable the RTC comms
+ 2fe:	2a 9a       	sbi	0x05, 2	; 5
+	return(SPDR);				//Return the byte.  SPDR=SPI Data Register
+ 300:	8e b5       	in	r24, 0x2e	; 46
+}
+ 302:	08 95       	ret
+
+00000304 <RTC_getTime>:
+	SPI_tradeByte(data);		//Send the data to be written to address
+	SLAVE_DESELECT_RTC;			//Disable the RTC comms
+}
+
+void RTC_getTime (struct RTC_Data *time)	//Fill in all structure fields from data in the RTC.
+{
+ 304:	0f 93       	push	r16
+ 306:	1f 93       	push	r17
+ 308:	8c 01       	movw	r16, r24
+	time->seconds = (RTC_SPI_readByte(RTC_SECR_RA));								//B7=0, B6-B4=(10 seconds), B3-B0=(seconds)
+ 30a:	80 e0       	ldi	r24, 0x00	; 0
+ 30c:	0e 94 79 01 	call	0x2f2	; 0x2f2 <RTC_SPI_readByte>
+ 310:	f8 01       	movw	r30, r16
+ 312:	80 83       	st	Z, r24
+	time->minutes = (RTC_SPI_readByte(RTC_MINR_RA));								//B7=0, B6-B4=(10 minutes), B3-B0=(minutes)
+ 314:	81 e0       	ldi	r24, 0x01	; 1
+ 316:	0e 94 79 01 	call	0x2f2	; 0x2f2 <RTC_SPI_readByte>
+ 31a:	f8 01       	movw	r30, r16
+ 31c:	81 83       	std	Z+1, r24	; 0x01
+	time->hours = ((RTC_SPI_readByte(RTC_HRR_RA)) & 0b00111111);					//B7-B6=0, B5=(20 hours/(~AM/PM)), B4=(10 hours), B3-B0=(hours)
+ 31e:	82 e0       	ldi	r24, 0x02	; 2
+ 320:	0e 94 79 01 	call	0x2f2	; 0x2f2 <RTC_SPI_readByte>
+ 324:	8f 73       	andi	r24, 0x3F	; 63
+ 326:	f8 01       	movw	r30, r16
+ 328:	82 83       	std	Z+2, r24	; 0x02
+	time->twelve_hr_flag = (((RTC_SPI_readByte(RTC_HRR_RA)) & 0b01000000) >> 6);	//B7-B1=0, B0=(12/~24)
+ 32a:	82 e0       	ldi	r24, 0x02	; 2
+ 32c:	0e 94 79 01 	call	0x2f2	; 0x2f2 <RTC_SPI_readByte>
+ 330:	90 e0       	ldi	r25, 0x00	; 0
+ 332:	80 74       	andi	r24, 0x40	; 64
+ 334:	90 70       	andi	r25, 0x00	; 0
+ 336:	26 e0       	ldi	r18, 0x06	; 6
+ 338:	95 95       	asr	r25
+ 33a:	87 95       	ror	r24
+ 33c:	2a 95       	dec	r18
+ 33e:	e1 f7       	brne	.-8      	; 0x338 <RTC_getTime+0x34>
+ 340:	f8 01       	movw	r30, r16
+ 342:	83 83       	std	Z+3, r24	; 0x03
+	time->day = (RTC_SPI_readByte(RTC_DAYR_RA));									//B7-B3=0, B2-B0=(day)
+ 344:	83 e0       	ldi	r24, 0x03	; 3
+ 346:	0e 94 79 01 	call	0x2f2	; 0x2f2 <RTC_SPI_readByte>
+ 34a:	f8 01       	movw	r30, r16
+ 34c:	84 83       	std	Z+4, r24	; 0x04
+	time->date = (RTC_SPI_readByte(RTC_DATER_RA));									//B7-B6=0, B5-B4=(10 date), B3-B0=(date)
+ 34e:	84 e0       	ldi	r24, 0x04	; 4
+ 350:	0e 94 79 01 	call	0x2f2	; 0x2f2 <RTC_SPI_readByte>
+ 354:	f8 01       	movw	r30, r16
+ 356:	85 83       	std	Z+5, r24	; 0x05
+	time->month = ((RTC_SPI_readByte(RTC_MCR_RA)) & 0b00011111);					//B7-B5=0, B4=(10 month), B3-B0=(month)
+ 358:	85 e0       	ldi	r24, 0x05	; 5
+ 35a:	0e 94 79 01 	call	0x2f2	; 0x2f2 <RTC_SPI_readByte>
+ 35e:	8f 71       	andi	r24, 0x1F	; 31
+ 360:	f8 01       	movw	r30, r16
+ 362:	86 83       	std	Z+6, r24	; 0x06
+	time->year = (RTC_SPI_readByte(RTC_YRR_RA));									//B7-B4=(10 year), B3-B0=(year)
+ 364:	86 e0       	ldi	r24, 0x06	; 6
+ 366:	0e 94 79 01 	call	0x2f2	; 0x2f2 <RTC_SPI_readByte>
+ 36a:	f8 01       	movw	r30, r16
+ 36c:	87 83       	std	Z+7, r24	; 0x07
+	time->century = ((RTC_SPI_readByte(RTC_MCR_RA)) >> 7);							//B7-B1=0, B0=(century)
+ 36e:	85 e0       	ldi	r24, 0x05	; 5
+ 370:	0e 94 79 01 	call	0x2f2	; 0x2f2 <RTC_SPI_readByte>
+ 374:	88 1f       	adc	r24, r24
+ 376:	88 27       	eor	r24, r24
+ 378:	88 1f       	adc	r24, r24
+ 37a:	f8 01       	movw	r30, r16
+ 37c:	80 87       	std	Z+8, r24	; 0x08
+ 37e:	1f 91       	pop	r17
+ 380:	0f 91       	pop	r16
+ 382:	08 95       	ret
+
+00000384 <SEV_SEG_writeByte>:
+#include <SPI.h>
+#include <MAX7219.h>
+
+ 
+void SEV_SEG_writeByte(uint8_t address, uint8_t data)	//Writes a byte to an address in the MAX7219
+{
+ 384:	0f 93       	push	r16
+ 386:	1f 93       	push	r17
+ 388:	18 2f       	mov	r17, r24
+ 38a:	06 2f       	mov	r16, r22
+	SEV_SEG_LOAD_LOW;			//Drop the level of the LOAD pin
+ 38c:	29 98       	cbi	0x05, 1	; 5
+	SPI_tradeByte(0);
+ 38e:	80 e0       	ldi	r24, 0x00	; 0
+ 390:	0e 94 66 01 	call	0x2cc	; 0x2cc <SPI_tradeByte>
+	SPI_tradeByte(0);
+ 394:	80 e0       	ldi	r24, 0x00	; 0
+ 396:	0e 94 66 01 	call	0x2cc	; 0x2cc <SPI_tradeByte>
+	SPI_tradeByte(address);		//Send the register address where the data will be stored
+ 39a:	81 2f       	mov	r24, r17
+ 39c:	0e 94 66 01 	call	0x2cc	; 0x2cc <SPI_tradeByte>
+	SPI_tradeByte(data);		//Send the data to be stored
+ 3a0:	80 2f       	mov	r24, r16
+ 3a2:	0e 94 66 01 	call	0x2cc	; 0x2cc <SPI_tradeByte>
+	SEV_SEG_LOAD_HIGH;			//Raise the level of the LOAD pin - this triggers latching of the sent bytes (last 16 bits of data are latched).
+ 3a6:	29 9a       	sbi	0x05, 1	; 5
+}
+ 3a8:	1f 91       	pop	r17
+ 3aa:	0f 91       	pop	r16
+ 3ac:	08 95       	ret
+
+000003ae <SEV_SEG_allClear>:
+	SEV_SEG_writeByte(SEV_SEG_SHUTDOWN, 1);			//Enter normal operation (exit shutdown mode).
+    SEV_SEG_writeByte(SEV_SEG_DECODE_MODE, 0xFF);	//Set all digits to be set by Code B data input.
+}
+
+void SEV_SEG_allClear(void)
+{
+ 3ae:	1f 93       	push	r17
+ 3b0:	18 e0       	ldi	r17, 0x08	; 8
+	uint8_t i;
+	for (i=8; i>0; i--)	//Counts down through the digits from digit 7 (8) to digit 0 (1).
+	{
+		SEV_SEG_writeByte(i, SEV_SEG_CODEB_BLANK);	//Clears the digit.
+ 3b2:	81 2f       	mov	r24, r17
+ 3b4:	6f e0       	ldi	r22, 0x0F	; 15
+ 3b6:	0e 94 c2 01 	call	0x384	; 0x384 <SEV_SEG_writeByte>
+}
+
+void SEV_SEG_allClear(void)
+{
+	uint8_t i;
+	for (i=8; i>0; i--)	//Counts down through the digits from digit 7 (8) to digit 0 (1).
+ 3ba:	11 50       	subi	r17, 0x01	; 1
+ 3bc:	d1 f7       	brne	.-12     	; 0x3b2 <SEV_SEG_allClear+0x4>
+	{
+		SEV_SEG_writeByte(i, SEV_SEG_CODEB_BLANK);	//Clears the digit.
+	}
+}
+ 3be:	1f 91       	pop	r17
+ 3c0:	08 95       	ret
+
+000003c2 <SEV_SEG_startupAni>:
+
+void SEV_SEG_startupAni(void)	//Simple startup animation scans the decimal point (DP) right to left then back a few times.
+{
+ 3c2:	ef 92       	push	r14
+ 3c4:	ff 92       	push	r15
+ 3c6:	0f 93       	push	r16
+ 3c8:	1f 93       	push	r17
+ 3ca:	cf 93       	push	r28
+ 3cc:	df 93       	push	r29
+	SEV_SEG_allClear();			//Start by clearing all digits.
+ 3ce:	0e 94 d7 01 	call	0x3ae	; 0x3ae <SEV_SEG_allClear>
+ 3d2:	03 e0       	ldi	r16, 0x03	; 3
+ 3d4:	84 ed       	ldi	r24, 0xD4	; 212
+ 3d6:	e8 2e       	mov	r14, r24
+ 3d8:	80 e3       	ldi	r24, 0x30	; 48
+ 3da:	f8 2e       	mov	r15, r24
+ 3dc:	c4 ed       	ldi	r28, 0xD4	; 212
+ 3de:	d0 e3       	ldi	r29, 0x30	; 48
+ 3e0:	25 c0       	rjmp	.+74     	; 0x42c <SEV_SEG_startupAni+0x6a>
+	while(i)
+	{
+		uint8_t j=4;		//The two while loops write the DP, pause, clear the DP then move to the next digit in this order: D3,D2,D1,D0,D1,D2, repeat.
+		while(j>0)
+		{
+			SEV_SEG_writeByte(j,0x8F);		//Clear the digit except turn on the DP
+ 3e2:	81 2f       	mov	r24, r17
+ 3e4:	6f e8       	ldi	r22, 0x8F	; 143
+ 3e6:	0e 94 c2 01 	call	0x384	; 0x384 <SEV_SEG_writeByte>
+ 3ea:	c7 01       	movw	r24, r14
+ 3ec:	01 97       	sbiw	r24, 0x01	; 1
+ 3ee:	f1 f7       	brne	.-4      	; 0x3ec <SEV_SEG_startupAni+0x2a>
+			_delay_ms(50);
+			SEV_SEG_writeByte(j,0x0F);		//Clear the digit inc. the DP
+ 3f0:	81 2f       	mov	r24, r17
+ 3f2:	6f e0       	ldi	r22, 0x0F	; 15
+ 3f4:	0e 94 c2 01 	call	0x384	; 0x384 <SEV_SEG_writeByte>
+			j--;
+ 3f8:	11 50       	subi	r17, 0x01	; 1
+	SEV_SEG_allClear();			//Start by clearing all digits.
+	uint8_t i = 3;				//Animation repeats 3 times.
+	while(i)
+	{
+		uint8_t j=4;		//The two while loops write the DP, pause, clear the DP then move to the next digit in this order: D3,D2,D1,D0,D1,D2, repeat.
+		while(j>0)
+ 3fa:	99 f7       	brne	.-26     	; 0x3e2 <SEV_SEG_startupAni+0x20>
+			SEV_SEG_writeByte(j,0x0F);		//Clear the digit inc. the DP
+			j--;
+		}
+		while(j<2)
+		{
+			SEV_SEG_writeByte(j+2,0x8F);	//Clear the digit except turn on the DP
+ 3fc:	82 e0       	ldi	r24, 0x02	; 2
+ 3fe:	6f e8       	ldi	r22, 0x8F	; 143
+ 400:	0e 94 c2 01 	call	0x384	; 0x384 <SEV_SEG_writeByte>
+ 404:	ce 01       	movw	r24, r28
+ 406:	01 97       	sbiw	r24, 0x01	; 1
+ 408:	f1 f7       	brne	.-4      	; 0x406 <SEV_SEG_startupAni+0x44>
+			_delay_ms(50);
+			SEV_SEG_writeByte(j+2,0x0F);	//Clear the digit inc. the DP
+ 40a:	82 e0       	ldi	r24, 0x02	; 2
+ 40c:	6f e0       	ldi	r22, 0x0F	; 15
+ 40e:	0e 94 c2 01 	call	0x384	; 0x384 <SEV_SEG_writeByte>
+			SEV_SEG_writeByte(j,0x0F);		//Clear the digit inc. the DP
+			j--;
+		}
+		while(j<2)
+		{
+			SEV_SEG_writeByte(j+2,0x8F);	//Clear the digit except turn on the DP
+ 412:	83 e0       	ldi	r24, 0x03	; 3
+ 414:	6f e8       	ldi	r22, 0x8F	; 143
+ 416:	0e 94 c2 01 	call	0x384	; 0x384 <SEV_SEG_writeByte>
+ 41a:	ce 01       	movw	r24, r28
+ 41c:	01 97       	sbiw	r24, 0x01	; 1
+ 41e:	f1 f7       	brne	.-4      	; 0x41c <SEV_SEG_startupAni+0x5a>
+			_delay_ms(50);
+			SEV_SEG_writeByte(j+2,0x0F);	//Clear the digit inc. the DP
+ 420:	83 e0       	ldi	r24, 0x03	; 3
+ 422:	6f e0       	ldi	r22, 0x0F	; 15
+ 424:	0e 94 c2 01 	call	0x384	; 0x384 <SEV_SEG_writeByte>
+			j++;		
+		}
+		i--;
+ 428:	01 50       	subi	r16, 0x01	; 1
+
+void SEV_SEG_startupAni(void)	//Simple startup animation scans the decimal point (DP) right to left then back a few times.
+{
+	SEV_SEG_allClear();			//Start by clearing all digits.
+	uint8_t i = 3;				//Animation repeats 3 times.
+	while(i)
+ 42a:	11 f0       	breq	.+4      	; 0x430 <SEV_SEG_startupAni+0x6e>
+ 42c:	14 e0       	ldi	r17, 0x04	; 4
+ 42e:	d9 cf       	rjmp	.-78     	; 0x3e2 <SEV_SEG_startupAni+0x20>
+			SEV_SEG_writeByte(j+2,0x0F);	//Clear the digit inc. the DP
+			j++;		
+		}
+		i--;
+	}
+}
+ 430:	df 91       	pop	r29
+ 432:	cf 91       	pop	r28
+ 434:	1f 91       	pop	r17
+ 436:	0f 91       	pop	r16
+ 438:	ff 90       	pop	r15
+ 43a:	ef 90       	pop	r14
+ 43c:	08 95       	ret
+
+0000043e <init_SEV_SEG>:
+	SEV_SEG_LOAD_HIGH;			//Raise the level of the LOAD pin - this triggers latching of the sent bytes (last 16 bits of data are latched).
+}
+
+void init_SEV_SEG(void)
+{
+	SPI_DDR |= (1 << SEV_SEG_LOAD); 				//Set LOAD pin as an output
+ 43e:	21 9a       	sbi	0x04, 1	; 4
+	PORTB |= (1 << SEV_SEG_LOAD);					//Set LOAD pin to high at start (data latching occurs on LOAD rising edge).
+ 440:	29 9a       	sbi	0x05, 1	; 5
+	SEV_SEG_writeByte(SEV_SEG_SCAN_LIMIT, 7);		//Set number of digits in the display to 8 (Data=number of digits - 1)
+ 442:	8b e0       	ldi	r24, 0x0B	; 11
+ 444:	67 e0       	ldi	r22, 0x07	; 7
+ 446:	0e 94 c2 01 	call	0x384	; 0x384 <SEV_SEG_writeByte>
+	SEV_SEG_writeByte(SEV_SEG_INTENSITY, 0x08);		//Set brightness (duty cycle) to about half-way.
+ 44a:	8a e0       	ldi	r24, 0x0A	; 10
+ 44c:	68 e0       	ldi	r22, 0x08	; 8
+ 44e:	0e 94 c2 01 	call	0x384	; 0x384 <SEV_SEG_writeByte>
+	SEV_SEG_writeByte(SEV_SEG_SHUTDOWN, 1);			//Enter normal operation (exit shutdown mode).
+ 452:	8c e0       	ldi	r24, 0x0C	; 12
+ 454:	61 e0       	ldi	r22, 0x01	; 1
+ 456:	0e 94 c2 01 	call	0x384	; 0x384 <SEV_SEG_writeByte>
+    SEV_SEG_writeByte(SEV_SEG_DECODE_MODE, 0xFF);	//Set all digits to be set by Code B data input.
+ 45a:	89 e0       	ldi	r24, 0x09	; 9
+ 45c:	6f ef       	ldi	r22, 0xFF	; 255
+ 45e:	0e 94 c2 01 	call	0x384	; 0x384 <SEV_SEG_writeByte>
+}
+ 462:	08 95       	ret
+
+00000464 <__udivmodqi4>:
+ 464:	99 1b       	sub	r25, r25
+ 466:	79 e0       	ldi	r23, 0x09	; 9
+ 468:	04 c0       	rjmp	.+8      	; 0x472 <__udivmodqi4_ep>
+
+0000046a <__udivmodqi4_loop>:
+ 46a:	99 1f       	adc	r25, r25
+ 46c:	96 17       	cp	r25, r22
+ 46e:	08 f0       	brcs	.+2      	; 0x472 <__udivmodqi4_ep>
+ 470:	96 1b       	sub	r25, r22
+
+00000472 <__udivmodqi4_ep>:
+ 472:	88 1f       	adc	r24, r24
+ 474:	7a 95       	dec	r23
+ 476:	c9 f7       	brne	.-14     	; 0x46a <__udivmodqi4_loop>
+ 478:	80 95       	com	r24
+ 47a:	08 95       	ret
+
+0000047c <_exit>:
+ 47c:	f8 94       	cli
+
+0000047e <__stop_program>:
+ 47e:	ff cf       	rjmp	.-2      	; 0x47e <__stop_program>

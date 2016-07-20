@@ -1,0 +1,423 @@
+   1               		.file	"GPSClock_Support.c"
+   2               	__SREG__ = 0x3f
+   3               	__SP_H__ = 0x3e
+   4               	__SP_L__ = 0x3d
+   5               	__CCP__  = 0x34
+   6               	__tmp_reg__ = 0
+   7               	__zero_reg__ = 1
+  15               	.Ltext0:
+  16               	.global	initClock
+  18               	initClock:
+  19               	.LFB6:
+  20               	.LM1:
+  21               	/* prologue: function */
+  22               	/* frame size = 0 */
+  23               	.LM2:
+  24 0000 E1E6      		ldi r30,lo8(97)
+  25 0002 F0E0      		ldi r31,hi8(97)
+  26 0004 80E8      		ldi r24,lo8(-128)
+  27 0006 8083      		st Z,r24
+  28               	.LM3:
+  29 0008 1082      		st Z,__zero_reg__
+  30               	/* epilogue start */
+  31               	.LM4:
+  32 000a 0895      		ret
+  33               	.LFE6:
+  35               	.global	init_buttons
+  37               	init_buttons:
+  38               	.LFB7:
+  39               	.LM5:
+  40               	/* prologue: function */
+  41               	/* frame size = 0 */
+  42               	.LM6:
+  43 000c 5298      		cbi 42-32,2
+  44               	.LM7:
+  45 000e 5A9A      		sbi 43-32,2
+  46               	/* epilogue start */
+  47               	.LM8:
+  48 0010 0895      		ret
+  49               	.LFE7:
+  51               	.global	refresh_display
+  53               	refresh_display:
+  54               	.LFB8:
+  55               	.LM9:
+  56               	.LVL0:
+  57 0012 CF93      		push r28
+  58 0014 DF93      		push r29
+  59               	/* prologue: function */
+  60               	/* frame size = 0 */
+  61 0016 EC01      		movw r28,r24
+  62               	.LM10:
+  63 0018 6130      		cpi r22,lo8(1)
+  64 001a 01F4      		brne .+2
+  65 001c 00C0      		rjmp .L8
+  66               	.LVL1:
+  67 001e 6130      		cpi r22,lo8(1)
+  68 0020 00F0      		brlo .L7
+  69 0022 6230      		cpi r22,lo8(2)
+  70 0024 01F4      		brne .+2
+  71 0026 00C0      		rjmp .L9
+  72 0028 6330      		cpi r22,lo8(3)
+  73 002a 01F0      		breq .+2
+  74 002c 00C0      		rjmp .L11
+  75 002e 00C0      		rjmp .L15
+  76               	.L7:
+  77               	.LM11:
+  78 0030 88E8      		ldi r24,lo8(-120)
+  79 0032 6FE0      		ldi r22,lo8(15)
+  80               	.LVL2:
+  81 0034 0E94 0000 		call SEV_SEG_writeByte
+  82               	.LM12:
+  83 0038 6E81      		ldd r22,Y+6
+  84 003a 6295      		swap r22
+  85 003c 6F70      		andi r22,lo8(15)
+  86 003e 87E8      		ldi r24,lo8(-121)
+  87 0040 0E94 0000 		call SEV_SEG_writeByte
+  88               	.LM13:
+  89 0044 6E81      		ldd r22,Y+6
+  90 0046 6F70      		andi r22,lo8(15)
+  91 0048 86E8      		ldi r24,lo8(-122)
+  92 004a 0E94 0000 		call SEV_SEG_writeByte
+  93               	.LM14:
+  94 004e 6D81      		ldd r22,Y+5
+  95 0050 6295      		swap r22
+  96 0052 6F70      		andi r22,lo8(15)
+  97 0054 85E8      		ldi r24,lo8(-123)
+  98 0056 0E94 0000 		call SEV_SEG_writeByte
+  99               	.LM15:
+ 100 005a 6D81      		ldd r22,Y+5
+ 101 005c 6F70      		andi r22,lo8(15)
+ 102 005e 84E8      		ldi r24,lo8(-124)
+ 103 0060 0E94 0000 		call SEV_SEG_writeByte
+ 104               	.LM16:
+ 105 0064 6C81      		ldd r22,Y+4
+ 106 0066 6295      		swap r22
+ 107 0068 6F70      		andi r22,lo8(15)
+ 108 006a 83E8      		ldi r24,lo8(-125)
+ 109 006c 0E94 0000 		call SEV_SEG_writeByte
+ 110               	.LM17:
+ 111 0070 6C81      		ldd r22,Y+4
+ 112 0072 6F70      		andi r22,lo8(15)
+ 113 0074 82E8      		ldi r24,lo8(-126)
+ 114 0076 0E94 0000 		call SEV_SEG_writeByte
+ 115               	.LM18:
+ 116 007a 6B81      		ldd r22,Y+3
+ 117 007c 6295      		swap r22
+ 118 007e 6F70      		andi r22,lo8(15)
+ 119 0080 81E8      		ldi r24,lo8(-127)
+ 120 0082 0E94 0000 		call SEV_SEG_writeByte
+ 121               	.LM19:
+ 122 0086 6B81      		ldd r22,Y+3
+ 123 0088 6F70      		andi r22,lo8(15)
+ 124 008a 88E0      		ldi r24,lo8(8)
+ 125 008c 0E94 0000 		call SEV_SEG_writeByte
+ 126               	.LM20:
+ 127 0090 6A81      		ldd r22,Y+2
+ 128 0092 6295      		swap r22
+ 129 0094 6F70      		andi r22,lo8(15)
+ 130 0096 87E0      		ldi r24,lo8(7)
+ 131 0098 0E94 0000 		call SEV_SEG_writeByte
+ 132               	.LM21:
+ 133 009c 6A81      		ldd r22,Y+2
+ 134 009e 6F70      		andi r22,lo8(15)
+ 135 00a0 86E0      		ldi r24,lo8(6)
+ 136 00a2 0E94 0000 		call SEV_SEG_writeByte
+ 137               	.LM22:
+ 138 00a6 6981      		ldd r22,Y+1
+ 139 00a8 6295      		swap r22
+ 140 00aa 6F70      		andi r22,lo8(15)
+ 141 00ac 85E0      		ldi r24,lo8(5)
+ 142 00ae 0E94 0000 		call SEV_SEG_writeByte
+ 143               	.LM23:
+ 144 00b2 6981      		ldd r22,Y+1
+ 145 00b4 6F70      		andi r22,lo8(15)
+ 146 00b6 00C0      		rjmp .L14
+ 147               	.LVL3:
+ 148               	.L8:
+ 149               	.LM24:
+ 150 00b8 88E8      		ldi r24,lo8(-120)
+ 151 00ba 6FE0      		ldi r22,lo8(15)
+ 152               	.LVL4:
+ 153 00bc 0E94 0000 		call SEV_SEG_writeByte
+ 154               	.LM25:
+ 155 00c0 6E81      		ldd r22,Y+6
+ 156 00c2 6295      		swap r22
+ 157 00c4 6F70      		andi r22,lo8(15)
+ 158 00c6 87E8      		ldi r24,lo8(-121)
+ 159 00c8 0E94 0000 		call SEV_SEG_writeByte
+ 160               	.LM26:
+ 161 00cc 6E81      		ldd r22,Y+6
+ 162 00ce 6F70      		andi r22,lo8(15)
+ 163 00d0 86E8      		ldi r24,lo8(-122)
+ 164 00d2 0E94 0000 		call SEV_SEG_writeByte
+ 165               	.LM27:
+ 166 00d6 6D81      		ldd r22,Y+5
+ 167 00d8 6295      		swap r22
+ 168 00da 6F70      		andi r22,lo8(15)
+ 169 00dc 85E8      		ldi r24,lo8(-123)
+ 170 00de 0E94 0000 		call SEV_SEG_writeByte
+ 171               	.LM28:
+ 172 00e2 6D81      		ldd r22,Y+5
+ 173 00e4 6F70      		andi r22,lo8(15)
+ 174 00e6 6068      		ori r22,lo8(-128)
+ 175 00e8 84E8      		ldi r24,lo8(-124)
+ 176 00ea 0E94 0000 		call SEV_SEG_writeByte
+ 177               	.LM29:
+ 178 00ee 6C81      		ldd r22,Y+4
+ 179 00f0 6295      		swap r22
+ 180 00f2 6F70      		andi r22,lo8(15)
+ 181 00f4 83E8      		ldi r24,lo8(-125)
+ 182 00f6 0E94 0000 		call SEV_SEG_writeByte
+ 183               	.LM30:
+ 184 00fa 6C81      		ldd r22,Y+4
+ 185 00fc 6F70      		andi r22,lo8(15)
+ 186 00fe 6068      		ori r22,lo8(-128)
+ 187 0100 82E8      		ldi r24,lo8(-126)
+ 188 0102 0E94 0000 		call SEV_SEG_writeByte
+ 189               	.LM31:
+ 190 0106 6B81      		ldd r22,Y+3
+ 191 0108 6295      		swap r22
+ 192 010a 6F70      		andi r22,lo8(15)
+ 193 010c 81E8      		ldi r24,lo8(-127)
+ 194 010e 0E94 0000 		call SEV_SEG_writeByte
+ 195               	.LM32:
+ 196 0112 6B81      		ldd r22,Y+3
+ 197 0114 6F70      		andi r22,lo8(15)
+ 198 0116 6068      		ori r22,lo8(-128)
+ 199 0118 88E0      		ldi r24,lo8(8)
+ 200 011a 0E94 0000 		call SEV_SEG_writeByte
+ 201               	.LM33:
+ 202 011e 6A81      		ldd r22,Y+2
+ 203 0120 6295      		swap r22
+ 204 0122 6F70      		andi r22,lo8(15)
+ 205 0124 87E0      		ldi r24,lo8(7)
+ 206 0126 0E94 0000 		call SEV_SEG_writeByte
+ 207               	.LM34:
+ 208 012a 6A81      		ldd r22,Y+2
+ 209 012c 6F70      		andi r22,lo8(15)
+ 210 012e 6068      		ori r22,lo8(-128)
+ 211 0130 86E0      		ldi r24,lo8(6)
+ 212 0132 0E94 0000 		call SEV_SEG_writeByte
+ 213               	.LM35:
+ 214 0136 6981      		ldd r22,Y+1
+ 215 0138 6295      		swap r22
+ 216 013a 6F70      		andi r22,lo8(15)
+ 217 013c 85E0      		ldi r24,lo8(5)
+ 218 013e 0E94 0000 		call SEV_SEG_writeByte
+ 219               	.LM36:
+ 220 0142 6981      		ldd r22,Y+1
+ 221 0144 6F70      		andi r22,lo8(15)
+ 222 0146 6068      		ori r22,lo8(-128)
+ 223               	.L14:
+ 224 0148 84E0      		ldi r24,lo8(4)
+ 225 014a 0E94 0000 		call SEV_SEG_writeByte
+ 226               	.LM37:
+ 227 014e 6881      		ld r22,Y
+ 228 0150 6295      		swap r22
+ 229 0152 6F70      		andi r22,lo8(15)
+ 230 0154 83E0      		ldi r24,lo8(3)
+ 231 0156 0E94 0000 		call SEV_SEG_writeByte
+ 232               	.LM38:
+ 233 015a 6881      		ld r22,Y
+ 234 015c 6F70      		andi r22,lo8(15)
+ 235 015e 82E0      		ldi r24,lo8(2)
+ 236 0160 0E94 0000 		call SEV_SEG_writeByte
+ 237               	.LM39:
+ 238 0164 81E0      		ldi r24,lo8(1)
+ 239 0166 6FE0      		ldi r22,lo8(15)
+ 240 0168 00C0      		rjmp .L12
+ 241               	.LVL5:
+ 242               	.L9:
+ 243               	.LM40:
+ 244 016a 6E81      		ldd r22,Y+6
+ 245               	.LVL6:
+ 246 016c 6295      		swap r22
+ 247 016e 6F70      		andi r22,lo8(15)
+ 248 0170 88E8      		ldi r24,lo8(-120)
+ 249 0172 0E94 0000 		call SEV_SEG_writeByte
+ 250               	.LM41:
+ 251 0176 6E81      		ldd r22,Y+6
+ 252 0178 6F70      		andi r22,lo8(15)
+ 253 017a 87E8      		ldi r24,lo8(-121)
+ 254 017c 0E94 0000 		call SEV_SEG_writeByte
+ 255               	.LM42:
+ 256 0180 6D81      		ldd r22,Y+5
+ 257 0182 6295      		swap r22
+ 258 0184 6F70      		andi r22,lo8(15)
+ 259 0186 86E8      		ldi r24,lo8(-122)
+ 260 0188 0E94 0000 		call SEV_SEG_writeByte
+ 261               	.LM43:
+ 262 018c 6D81      		ldd r22,Y+5
+ 263 018e 6F70      		andi r22,lo8(15)
+ 264 0190 85E8      		ldi r24,lo8(-123)
+ 265 0192 0E94 0000 		call SEV_SEG_writeByte
+ 266               	.LM44:
+ 267 0196 6C81      		ldd r22,Y+4
+ 268 0198 6295      		swap r22
+ 269 019a 6F70      		andi r22,lo8(15)
+ 270 019c 84E8      		ldi r24,lo8(-124)
+ 271 019e 0E94 0000 		call SEV_SEG_writeByte
+ 272               	.LM45:
+ 273 01a2 6C81      		ldd r22,Y+4
+ 274 01a4 6F70      		andi r22,lo8(15)
+ 275 01a6 83E8      		ldi r24,lo8(-125)
+ 276 01a8 0E94 0000 		call SEV_SEG_writeByte
+ 277               	.LM46:
+ 278 01ac 6B81      		ldd r22,Y+3
+ 279 01ae 6295      		swap r22
+ 280 01b0 6F70      		andi r22,lo8(15)
+ 281 01b2 82E8      		ldi r24,lo8(-126)
+ 282 01b4 0E94 0000 		call SEV_SEG_writeByte
+ 283               	.LM47:
+ 284 01b8 6B81      		ldd r22,Y+3
+ 285 01ba 6F70      		andi r22,lo8(15)
+ 286 01bc 81E8      		ldi r24,lo8(-127)
+ 287 01be 0E94 0000 		call SEV_SEG_writeByte
+ 288               	.LM48:
+ 289 01c2 88E0      		ldi r24,lo8(8)
+ 290 01c4 6FE0      		ldi r22,lo8(15)
+ 291 01c6 0E94 0000 		call SEV_SEG_writeByte
+ 292               	.LM49:
+ 293 01ca 87E0      		ldi r24,lo8(7)
+ 294 01cc 6FE0      		ldi r22,lo8(15)
+ 295 01ce 0E94 0000 		call SEV_SEG_writeByte
+ 296               	.LM50:
+ 297 01d2 6A81      		ldd r22,Y+2
+ 298 01d4 6295      		swap r22
+ 299 01d6 6F70      		andi r22,lo8(15)
+ 300 01d8 86E0      		ldi r24,lo8(6)
+ 301 01da 0E94 0000 		call SEV_SEG_writeByte
+ 302               	.LM51:
+ 303 01de 6A81      		ldd r22,Y+2
+ 304 01e0 6F70      		andi r22,lo8(15)
+ 305 01e2 85E0      		ldi r24,lo8(5)
+ 306 01e4 0E94 0000 		call SEV_SEG_writeByte
+ 307               	.LM52:
+ 308 01e8 6981      		ldd r22,Y+1
+ 309 01ea 6295      		swap r22
+ 310 01ec 6F70      		andi r22,lo8(15)
+ 311 01ee 84E0      		ldi r24,lo8(4)
+ 312 01f0 0E94 0000 		call SEV_SEG_writeByte
+ 313               	.LM53:
+ 314 01f4 6981      		ldd r22,Y+1
+ 315 01f6 6F70      		andi r22,lo8(15)
+ 316 01f8 00C0      		rjmp .L13
+ 317               	.LVL7:
+ 318               	.L15:
+ 319               	.LM54:
+ 320 01fa 6E81      		ldd r22,Y+6
+ 321               	.LVL8:
+ 322 01fc 6295      		swap r22
+ 323 01fe 6F70      		andi r22,lo8(15)
+ 324 0200 88E8      		ldi r24,lo8(-120)
+ 325 0202 0E94 0000 		call SEV_SEG_writeByte
+ 326               	.LM55:
+ 327 0206 6E81      		ldd r22,Y+6
+ 328 0208 6F70      		andi r22,lo8(15)
+ 329 020a 87E8      		ldi r24,lo8(-121)
+ 330 020c 0E94 0000 		call SEV_SEG_writeByte
+ 331               	.LM56:
+ 332 0210 6D81      		ldd r22,Y+5
+ 333 0212 6295      		swap r22
+ 334 0214 6F70      		andi r22,lo8(15)
+ 335 0216 86E8      		ldi r24,lo8(-122)
+ 336 0218 0E94 0000 		call SEV_SEG_writeByte
+ 337               	.LM57:
+ 338 021c 6D81      		ldd r22,Y+5
+ 339 021e 6F70      		andi r22,lo8(15)
+ 340 0220 6068      		ori r22,lo8(-128)
+ 341 0222 85E8      		ldi r24,lo8(-123)
+ 342 0224 0E94 0000 		call SEV_SEG_writeByte
+ 343               	.LM58:
+ 344 0228 6C81      		ldd r22,Y+4
+ 345 022a 6295      		swap r22
+ 346 022c 6F70      		andi r22,lo8(15)
+ 347 022e 84E8      		ldi r24,lo8(-124)
+ 348 0230 0E94 0000 		call SEV_SEG_writeByte
+ 349               	.LM59:
+ 350 0234 6C81      		ldd r22,Y+4
+ 351 0236 6F70      		andi r22,lo8(15)
+ 352 0238 6068      		ori r22,lo8(-128)
+ 353 023a 83E8      		ldi r24,lo8(-125)
+ 354 023c 0E94 0000 		call SEV_SEG_writeByte
+ 355               	.LM60:
+ 356 0240 6B81      		ldd r22,Y+3
+ 357 0242 6295      		swap r22
+ 358 0244 6F70      		andi r22,lo8(15)
+ 359 0246 82E8      		ldi r24,lo8(-126)
+ 360 0248 0E94 0000 		call SEV_SEG_writeByte
+ 361               	.LM61:
+ 362 024c 6B81      		ldd r22,Y+3
+ 363 024e 6F70      		andi r22,lo8(15)
+ 364 0250 6068      		ori r22,lo8(-128)
+ 365 0252 81E8      		ldi r24,lo8(-127)
+ 366 0254 0E94 0000 		call SEV_SEG_writeByte
+ 367               	.LM62:
+ 368 0258 88E0      		ldi r24,lo8(8)
+ 369 025a 6FE0      		ldi r22,lo8(15)
+ 370 025c 0E94 0000 		call SEV_SEG_writeByte
+ 371               	.LM63:
+ 372 0260 87E0      		ldi r24,lo8(7)
+ 373 0262 6FE0      		ldi r22,lo8(15)
+ 374 0264 0E94 0000 		call SEV_SEG_writeByte
+ 375               	.LM64:
+ 376 0268 6A81      		ldd r22,Y+2
+ 377 026a 6295      		swap r22
+ 378 026c 6F70      		andi r22,lo8(15)
+ 379 026e 86E0      		ldi r24,lo8(6)
+ 380 0270 0E94 0000 		call SEV_SEG_writeByte
+ 381               	.LM65:
+ 382 0274 6A81      		ldd r22,Y+2
+ 383 0276 6F70      		andi r22,lo8(15)
+ 384 0278 6068      		ori r22,lo8(-128)
+ 385 027a 85E0      		ldi r24,lo8(5)
+ 386 027c 0E94 0000 		call SEV_SEG_writeByte
+ 387               	.LM66:
+ 388 0280 6981      		ldd r22,Y+1
+ 389 0282 6295      		swap r22
+ 390 0284 6F70      		andi r22,lo8(15)
+ 391 0286 84E0      		ldi r24,lo8(4)
+ 392 0288 0E94 0000 		call SEV_SEG_writeByte
+ 393               	.LM67:
+ 394 028c 6981      		ldd r22,Y+1
+ 395 028e 6F70      		andi r22,lo8(15)
+ 396 0290 6068      		ori r22,lo8(-128)
+ 397               	.L13:
+ 398 0292 83E0      		ldi r24,lo8(3)
+ 399 0294 0E94 0000 		call SEV_SEG_writeByte
+ 400               	.LM68:
+ 401 0298 6881      		ld r22,Y
+ 402 029a 6295      		swap r22
+ 403 029c 6F70      		andi r22,lo8(15)
+ 404 029e 82E0      		ldi r24,lo8(2)
+ 405 02a0 0E94 0000 		call SEV_SEG_writeByte
+ 406               	.LM69:
+ 407 02a4 6881      		ld r22,Y
+ 408 02a6 6F70      		andi r22,lo8(15)
+ 409 02a8 81E0      		ldi r24,lo8(1)
+ 410               	.L12:
+ 411 02aa 0E94 0000 		call SEV_SEG_writeByte
+ 412               	.LVL9:
+ 413               	.L11:
+ 414               	/* epilogue start */
+ 415               	.LM70:
+ 416 02ae DF91      		pop r29
+ 417 02b0 CF91      		pop r28
+ 418               	.LVL10:
+ 419 02b2 0895      		ret
+ 420               	.LFE8:
+ 462               	.Letext0:
+DEFINED SYMBOLS
+                            *ABS*:00000000 GPSClock_Support.c
+C:\Users\Jadonis\AppData\Local\Temp/ccrm1S8e.s:2      *ABS*:0000003f __SREG__
+C:\Users\Jadonis\AppData\Local\Temp/ccrm1S8e.s:3      *ABS*:0000003e __SP_H__
+C:\Users\Jadonis\AppData\Local\Temp/ccrm1S8e.s:4      *ABS*:0000003d __SP_L__
+C:\Users\Jadonis\AppData\Local\Temp/ccrm1S8e.s:5      *ABS*:00000034 __CCP__
+C:\Users\Jadonis\AppData\Local\Temp/ccrm1S8e.s:6      *ABS*:00000000 __tmp_reg__
+C:\Users\Jadonis\AppData\Local\Temp/ccrm1S8e.s:7      *ABS*:00000001 __zero_reg__
+C:\Users\Jadonis\AppData\Local\Temp/ccrm1S8e.s:18     .text:00000000 initClock
+C:\Users\Jadonis\AppData\Local\Temp/ccrm1S8e.s:37     .text:0000000c init_buttons
+C:\Users\Jadonis\AppData\Local\Temp/ccrm1S8e.s:53     .text:00000012 refresh_display
+
+UNDEFINED SYMBOLS
+SEV_SEG_writeByte
