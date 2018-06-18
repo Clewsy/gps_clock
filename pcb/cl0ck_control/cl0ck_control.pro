@@ -1,4 +1,4 @@
-update=Sun 17 Jun 2018 20:50:43 AEST
+update=Mon 18 Jun 2018 14:13:00 AEST
 version=1
 last_client=kicad
 [pcbnew]
@@ -27,7 +27,7 @@ NetIExt=net
 version=1
 [eeschema]
 version=1
-LibDir=/home/b4t/projects/GPSClock/pcb
+LibDir=
 [eeschema/libraries]
 LibName1=power
 LibName2=device
@@ -58,8 +58,5 @@ LibName26=opto
 LibName27=atmel
 LibName28=contrib
 LibName29=valves
-LibName30=cl0ck_lib
-LibName31=maxim
-LibName32=max
-LibName33=maxim-ic
-LibName34=switches
+LibName30=switches
+LibName31=maxim-ic

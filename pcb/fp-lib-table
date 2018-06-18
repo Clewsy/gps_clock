@@ -1,5 +1,0 @@
-(fp_lib_table
-  (lib (name cl0ck)(type KiCad)(uri "$(KIPRJMOD)/cl0ck.pretty")(options "")(descr ""))
-  (lib (name Battery_Holders)(type KiCad)(uri "$(KISYSMOD)Battery_Holders.pretty")(options "")(descr ""))
-  (lib (name Connect)(type KiCad)(uri "$(KISYSMOD)Connect.pretty")(options "")(descr ""))
-)
