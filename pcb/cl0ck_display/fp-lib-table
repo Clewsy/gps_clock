@@ -1,0 +1,3 @@
+(fp_lib_table
+  (lib (name cl0ck_display)(type KiCad)(uri "$(KIPRJMOD)/cl0ck_display.pretty")(options "")(descr ""))
+)

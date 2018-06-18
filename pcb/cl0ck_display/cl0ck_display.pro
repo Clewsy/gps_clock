@@ -1,4 +1,4 @@
-update=Mon 18 Jun 2018 14:03:33 AEST
+update=Mon 18 Jun 2018 14:38:49 AEST
 version=1
 last_client=kicad
 [pcbnew]
@@ -59,4 +59,3 @@ LibName27=atmel
 LibName28=contrib
 LibName29=valves
 LibName30=max
-LibName31=/home/b4t/projects/GPSClock/pcb/cl0ck_lib
