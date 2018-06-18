@@ -1,0 +1,30 @@
+EESchema-DOCLIB  Version 2.0
+#
+$CMP DS1307
+D Maxim RTC Chip
+F http://datasheets.maximintegrated.com/en/ds/DS1307.pdf
+$ENDCMP
+#
+$CMP DS8500
+D The DS8500 is a single-chip modem with Highway Addressable Remote Transducer (HART) capabilities
+K HART, FSK, 1200, 2400
+F https://datasheets.maximintegrated.com/en/ds/DS8500.pdf
+$ENDCMP
+#
+$CMP MAX6195
+D Low-Dropout Voltage References
+K reference, ldo, stable
+$ENDCMP
+#
+$CMP MAX7219
+D Serially Interfaced, 8-Digit LED Display Driver
+K led, 7segment, display driver, led driver
+$ENDCMP
+#
+$CMP MAX9617
+D Single SC70, Zero-Drift, High-Efficiency, 1.5MHz Op Amp with RRIO
+K opamp, rail-to-rail
+F http://datasheets.maximintegrated.com/en/ds/MAX9617-MAX9620.pdf
+$ENDCMP
+#
+#End Doc Library
