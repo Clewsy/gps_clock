@@ -1,0 +1,40 @@
+       EESchema-LIBRARY Version 2.3
+           #encoding utf-8
+           #
+           # MAX-7219
+           #
+           DEF MAX-7219 U 0 40 Y Y 1 F N
+           F0 "U" 0 -700 60 H V C CNN
+           F1 "MAX-7219" 0 700 60 H V C CNN
+           F2 "" 600 0 60 H V C CNN
+           F3 "" 600 0 60 H V C CNN
+           DRAW
+           S -300 650 300 -650 0 1 0 f
+           X DIN 1 -600 550 300 R 50 50 1 1 I
+           X DIG0 2 -600 450 300 R 50 50 1 1 O
+           X DIG4 3 -600 350 300 R 50 50 1 1 O
+           X GND 4 -600 250 300 R 50 50 1 1 W
+           X DIG6 5 -600 150 300 R 50 50 1 1 O
+           X DIG2 6 -600 50 300 R 50 50 1 1 O
+           X DIG3 7 -600 -50 300 R 50 50 1 1 O
+           X DIG7 8 -600 -150 300 R 50 50 1 1 O
+           X GND 9 -600 -250 300 R 50 50 1 1 W
+           X DIG5 10 -600 -350 300 R 50 50 1 1 O
+           X SEGC 20 600 150 300 L 50 50 1 1 B
+           X DIG1 11 -600 -450 300 R 50 50 1 1 O
+           X SEGE 21 600 250 300 L 50 50 1 1 B
+           X LOAD 12 -600 -550 300 R 50 50 1 1 I
+           X SEGDP 22 600 350 300 L 50 50 1 1 B
+           X CLK 13 600 -550 300 L 50 50 1 1 I
+           X SEGD 23 600 450 300 L 50 50 1 1 B
+           X SEGA 14 600 -450 300 L 50 50 1 1 B
+           X DOUT 24 600 550 300 L 50 50 1 1 O
+           X SEGF 15 600 -350 300 L 50 50 1 1 B
+           X SEGB 16 600 -250 300 L 50 50 1 1 B
+           X SEGG 17 600 -150 300 L 50 50 1 1 B
+           X ISET 18 600 -50 300 L 50 50 1 1 I
+           X VCC 19 600 50 300 L 50 50 1 1 W
+           ENDDRAW
+           ENDDEF
+           #
+           #End Library
