@@ -1,6 +1,6 @@
 //Definitions and declarations to control two cascaded MAX7219 8x7-segment display drivers (total 16x 70segment digits).
 
-//These MAX7219.h and .c files will drive two cascaded MAX7219 drivers to control a total 16 digits.
+//These max7219.h and .c files will drive two cascaded MAX7219 drivers to control a total 16 digits.
 //The digits are numbered 0 to 15 from left to right: DIG_0-> |8.8.8.8.8.8.8.8.8.8.8.8.8.8.8.8.| <-DIG_15
 //When latched, the drivers expect 16 bits of data.  8 MSBs are the address byte, 8 LSBs are the data byte.
 //The 4 MSBs of the address are "Don't cares" as far as the drivers are concerned, but this code will use the MSB to identify which driver is being used ie:
@@ -71,13 +71,11 @@
 #define SEV_SEG_CODEB_BLANK	0x0F	//All segments off (inc. DP).
 #define SEV_SEG_CODEB_DASH	0x0A	//G segment only (i.e. a "-") (note, DP off)
 
-//OR with data sent to digit to turn on the decimal point.
+//OR with data sent to digit to turn on the decimal point (i.e. MSb toggles the DP).
 #define SEV_SEG_DP	0x80
 
 //MAX7219 control function declarations.
-void sev_seg_writeByte(uint8_t address, uint8_t data);	//Writes a byte to an address in both of the MAX7219s.  Note, one driver will receive data, the other will receive no-op command.
+void sev_seg_write_byte(uint8_t address, uint8_t data);	//Writes a byte to an address the MAX7219s.  One driver will receive data, the other will receive no-op.
 void sev_seg_init(void);				//Initialise both the display drivers.
-void sev_seg_allClear(void);				//Clears all digits.
-void sev_seg_startupAni(void);				//Simple startup animation scans the decimal point (DP) right to left then back a few times.
-
-void sev_seg_display_int(uint64_t num);
+void sev_seg_all_clear(void);				//Clears all digits.
+void sev_seg_display_int(uint64_t num);			//Takse any 64-bit integer and displays the decimal value using the 16 7-seg digits.
