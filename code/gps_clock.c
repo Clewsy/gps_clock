@@ -53,27 +53,27 @@ void display_time(uint8_t *time, uint8_t mode)
 			break;
 	}
 
-	int i;	//General use integer for running for loops.
+	uint8_t i;	//General use integer for running for loops.
 
 	//This loop will apply the decimal point flag to the last digit of each date/time component IF "delimiters" is set my the operating mode.
-	for (i=3;i<14;i+=2)
+	for (i = 3; i < 14; i += 2)
 	{
 		time[i] |= delimiters;	//"delimiters" is either 0 (no effect) or SEV_SEG_DP which will set the decimal point flag for the sev-seg drivers.
 	}
 
 	//This loop will clear every digit in the display buffer in case the mode has changed.
-	for (i=0;i<16;i++)
+	for (i = 0; i < 16; i++)
 	{
 		disp_buffer[i] = SEV_SEG_CODEB_BLANK;
 	}
 
 	//This loop will set the display buffer digits for the date components (CEN, YEA, MON, DAY).
-	for (i=0;i<8;i++)
+	for (i = 0; i < 8; i++)
 	{
 		disp_buffer[i + date_offset] = time[i];			//"date_offset" determined by current mode.
 	}
 	//This loop will set the display buffer digits for the time components (HOU, MIN, SEC).
-	for (i=8;i<14;i++)
+	for (i = 8; i < 14; i++)
 	{
 		disp_buffer[i + date_offset + time_offset] = time[i];	//"time_offset" determined by current mode.
 	}
@@ -93,18 +93,19 @@ void clear_disp_buffer(void)
 //This function will take the contents of the display buffer array and send it to the seven segment display drivers
 void refresh_display(void)
 {
-	int i;
-	for (i=0;i<8;i++)	//Each iteration will send a digit to driver A and a digit to driver B so 8 iterations sends all 16 digits.
+	for (uint8_t i = 0; i < 8; i++)	//Each iteration will send a digit to driver A and a digit to driver B so 8 iterations sends all 16 digits.
 	{
-		sev_seg_write_byte(SEV_SEG_DIGIT_0 + i, disp_buffer[i]);	//Send the digit for driver A.
-		sev_seg_write_byte(SEV_SEG_DIGIT_8 + i, disp_buffer[i+8]);	//Send the digit for driver B.
+		sev_seg_write_byte(SEV_SEG_DIGIT_0 + i, disp_buffer[i]);	//Send the digit for driver A (digits 0 to 7).
+		sev_seg_write_byte(SEV_SEG_DIGIT_8 + i, disp_buffer[i+8]);	//Send the digit for driver B (digits 8 to 15).
 	}
 }
 
 //This function will update the time array by parsing the date and time from the GPS module.
-void sync_time (uint8_t *time)
+uint8_t sync_time (uint8_t *time)
 {
-	usart_print_string("Syncing\r\n");	//For debugging; indicates entering sync loop
+	usart_print_string("\r\nSyncing...");	//For debugging; indicates entering sync loop
+
+	uint8_t i;	//Initialise an integer to use in for loops
 
 	//RMC sentence format (sections of data separated by commas):
 	//Example: $GPRMC,161229.487,A,3723.2475,N,12158.3416,W,0.13,309.62,120598, ,*10
@@ -113,11 +114,9 @@ void sync_time (uint8_t *time)
 	while(usart_receive_byte() != 'R'){};		//Ignore all received bytes until the 'R' character is received.
 	if(usart_receive_byte() == 'M')			//If the next character is 'M'...
 	{
-		if(usart_receive_byte() == 'C')		//And the third character is 'C'...
+		if(usart_receive_byte() == 'C')		//And the third character is 'C'...  Verified that we have reached the RMC NMEA string.
 		{
 			usart_receive_byte();		//Ignore the next received byte (delimiter ",")
-
-			int i;	//Initialise an integer to use in for loops
 
 			//The next 6 bytes received represent the time in BCD -> H,H,M,M,S,S
 			for (i = HOU_TENS; i <= SEC_ONES; i++)
@@ -128,8 +127,7 @@ void sync_time (uint8_t *time)
 			//The next 8 elements of the NMEA data aren't needed and so are ignored.
 			for(i = 0; i < 8; i++)			//Loop 8 times
 			{
-				do {}
-				while (usart_receive_byte() != ',');	//Skip through 8 delimiters (",") from the RMC sentence to get to the date data.
+				while (usart_receive_byte() != ','){};	//Skip through 8 delimiters (",") from the RMC sentence to get to the date data.
 			}
 
 			//The next 6 bytes received represent the date but are received in an inconvenient order -> D,D,M,M,Y,Y
@@ -141,42 +139,28 @@ void sync_time (uint8_t *time)
 			time[YEA_ONES] = (usart_receive_byte() - '0');	//Year ones
 
 			//The final two bytes needed for the time array represent the century.  Safe to set this to "20".
-			time[CEN_TENS] = 2;				//Century (Year hundreds & thousands)
-			time[CEN_ONES] = 0;				//Century (Year hundreds & thousands)
-			//Note, this will not work as of midnight January 1st, 2100.
+			time[CEN_TENS] = 2;				//Century (Year thousands)
+			time[CEN_ONES] = 0;				//Century (Year hundreds)
+			//Note, this will cease working as of midnight, January 1st, 2100.
 
 			//We now have the UTC date/time array in BCD format [Y,Y,Y,Y,M,M,D,D,H,H,M,M,S,S]
 		}
 	}
 
-	//debugging: print date to usart
-	usart_print_string("yyyy-mm-dd : ");
-	usart_transmit_byte(time[CEN_TENS] + '0');
-	usart_transmit_byte(time[CEN_ONES] + '0');
-	usart_transmit_byte(time[YEA_TENS] + '0');
-	usart_transmit_byte(time[YEA_ONES] + '0');
-	usart_print_string("-");
-	usart_transmit_byte(time[MON_TENS] + '0');
-	usart_transmit_byte(time[MON_ONES] + '0');
-	usart_print_string("-");
-	usart_transmit_byte(time[DAY_TENS] + '0');
-	usart_transmit_byte(time[DAY_ONES] + '0');
+	//Error checking.  All digits in the date/time array "time[]" should be 0-9.  If anything else is found, exit the function and return FALSE.
+	for(i = YEA_TENS; i <= SEC_ONES; i++)		//Loop through all elements of the "time" array (excluding manually set century).
+	{
+		if(time[i] > 9)				//If any element is an integer larger than 9, then the data is no good.
+		{
+			usart_print_string("No good.");	//Print to usart for debugging.
+			return(FALSE);			//If the time data is no good, exit the function and return FALSE.
+		}
+	}
 
-	//debugging: print time to usart
-	usart_print_string("\r\n  hh-mm-ss : ");
-	usart_transmit_byte(time[HOU_TENS] + '0');
-	usart_transmit_byte(time[HOU_ONES] + '0');
-	usart_print_string(":");
-	usart_transmit_byte(time[MIN_TENS] + '0');
-	usart_transmit_byte(time[MIN_ONES] + '0');
-	usart_print_string(":");
-	usart_transmit_byte(time[SEC_TENS] + '0');
-	usart_transmit_byte(time[SEC_ONES] + '0');
-	usart_print_string("\r\n");
-
+	return(TRUE);	//This will only be reached if the function received valid time data from the GPS module, so return TRUE.
 }
 
-//Simple startup animation scans the decimal point (DP) right to left then back a few times.
+//Simple startup animation that displays "ISO-8601" then scans the decimal point (DP) right to left then back a few times.
 void sev_seg_startupAni(void)
 {
 	clear_disp_buffer();		//Start by setting all 16 digits in the buffer to blank (off).
@@ -184,6 +168,18 @@ void sev_seg_startupAni(void)
 
 	uint8_t i, j;			//Initialise a couple of integers for loops.
 
+	//Following block prints "ISO-8601" to the seven-segment displays for 2 seconds.
+	uint8_t splash_string[16] = 	{SEV_SEG_CODEB_BLANK, SEV_SEG_CODEB_BLANK, SEV_SEG_CODEB_BLANK, SEV_SEG_CODEB_BLANK,
+		 			1, 5, 0, SEV_SEG_CODEB_DASH, 8, 6, 0, 1,
+					SEV_SEG_CODEB_BLANK, SEV_SEG_CODEB_BLANK, SEV_SEG_CODEB_BLANK, SEV_SEG_CODEB_BLANK};
+	for (i = 0; i < 16; i++)
+	{
+		disp_buffer[i] = splash_string[i];	//Copy the splash_string array to the disp_buffer array.
+	}
+	refresh_display();		//Refresh the display in accordance with the buffer.
+	_delay_ms(2000);		//Wait for milliseconds.
+
+	//The following nested loops scans the decimal point (DP) right to left then back a few times.
 	for (j = 0; j < 5; j++)		//Repeat main animation sequence 5 times.
 	{
 		for (i = 0; i < 16; i++)	//Increment the following through all 16 digits 0 to 15 (left to right).
@@ -202,17 +198,6 @@ void sev_seg_startupAni(void)
 		}
 	}
 
-	//Following block prints "ISO-8601" to the seven-segment displays for 2 seconds.
-	uint8_t splash_string[16] = 	{SEV_SEG_CODEB_BLANK, SEV_SEG_CODEB_BLANK, SEV_SEG_CODEB_BLANK, SEV_SEG_CODEB_BLANK,
-		 			1, 5, 0, SEV_SEG_CODEB_DASH, 8, 6, 0, 1,
-					SEV_SEG_CODEB_BLANK, SEV_SEG_CODEB_BLANK, SEV_SEG_CODEB_BLANK, SEV_SEG_CODEB_BLANK};
-	for (i = 0; i < 16; i++)
-	{
-		disp_buffer[i] = splash_string[i];	//Copy the splash_string array to the disp_buffer array.
-	}
-	refresh_display();		//Refresh the display in accordance with the buffer.
-	_delay_ms(2000);		//Wait for milliseconds.
-
 	clear_disp_buffer();		//End by setting all 16 digits in the buffer to blank (off).
 	refresh_display();		//Refresh the display in accordance with the buffer (i.e. clear all digits);
 }
@@ -228,12 +213,18 @@ int main(void)
 	//for debugging - display an integer for 2 seconds
 	//sev_seg_display_int(1234567890180085);
 	//_delay_ms(2000);
-	//sev_seg_all_clear();
+	sev_seg_all_clear();
 
 	while (1)
 	{
-		sync_time(time);
-		display_time(time, MODE_1B);
+		if(sync_time(time))
+		{
+			display_time(time, MODE_1B);
+		}
+		else
+		{
+			sev_seg_display_int(80085);
+		}
 	}
 
 	return 0;	//Never reached.

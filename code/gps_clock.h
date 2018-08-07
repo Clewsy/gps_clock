@@ -6,6 +6,9 @@
 #include "spi.h"
 #include "max7219.h"
 
+#define TRUE	1
+#define FALSE	0
+
 //Define the display modes
 //Mode 1 shows the date on the left and the time on the right with two blank segments between them.
 //Mode 2 shows the date and time together with no gap but a blank digit either side of the full date/time.
@@ -62,5 +65,5 @@ void hardware_init(void);			//Initialise the peripherals.
 void display_time(uint8_t *time, uint8_t mode);	//Show the current time in accordance with the selected display mode.
 void clear_disp_buffer(void);			//Write data to the display buffer that corresponds to a blank digit (all segments off) for all 16.
 void refresh_display(void);			//Take the contents of the display buffer array and send it to the seven segment display drivers.
-void sync_time (uint8_t *time);			//Update the time array by parsing the date and time from the GPS module.
+uint8_t sync_time (uint8_t *time);		//Update the time array by parsing the date and time from the GPS module.  Returns FALSE if data is invalid.
 void sev_seg_startupAni(void);			////Simple startup animation scans the decimal point (DP) right to left then back a few times.
