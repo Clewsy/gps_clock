@@ -24,7 +24,7 @@ void spi_init(uint8_t polarity, uint8_t phase)
 }
 
 //The basic function used to send and receive a byte via SPI (as a byte rolls out, one rolls in).
-void spi_tradeByte(uint8_t byte)
+void spi_trade_byte(uint8_t byte)
 {
 	SPDR = byte; 				//SPI starts sending immediately.  SPDR=SPI Data Register
 	while(!(SPSR & (1 << SPIF))) {}		//Wait until SPIF (SPI Interrupt Flag) in the SPSR (SPI Status Register) is set indication transfer is complete

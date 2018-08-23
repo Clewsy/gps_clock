@@ -5,6 +5,7 @@
 #include "usart.h"
 #include "spi.h"
 #include "max7219.h"
+#include "ds3234.h"
 
 #define TRUE	1
 #define FALSE	0
@@ -25,8 +26,8 @@
 #define YEA_ONES 3
 #define MON_TENS 4
 #define MON_ONES 5
-#define DAY_TENS 6
-#define DAY_ONES 7
+#define DAT_TENS 6
+#define DAT_ONES 7
 #define HOU_TENS 8
 #define HOU_ONES 9
 #define MIN_TENS 10
@@ -42,8 +43,8 @@ uint8_t time[SIZE_OF_TIME_ARRAY];	//time[0]  = time[CEN_TENS] : Century tens,	1 
 					//time[3]  = time[YEA_ONES] : Year ones,	0 to 9
 					//time[4]  = time[MON_TENS] : Month tens,	0 to 1
 					//time[6]  = time[MON_ONES] : Month ones,	0 to 9
-					//time[5]  = time[DAY_TENS] : Day tens,		0 to 3
-					//time[7]  = time[DAY_ONES] : Day ones,		0 to 9
+					//time[5]  = time[DAT_TENS] : DAT tens,		0 to 3
+					//time[7]  = time[DAT_ONES] : DAT ones,		0 to 9
 					//time[8]  = time[HOU_TENS] : Hour tens,	0 to 2
 					//time[9]  = time[HOU_ONES] : Hour ones,	0 to 9
 					//time[10] = time[MIN_TENS] : Minute tens,	0 to 5

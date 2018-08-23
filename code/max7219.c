@@ -6,21 +6,21 @@ void sev_seg_write_byte(uint8_t address, uint8_t data)
 {
 	if(address & 0x80)		//Check driver flag.  If set, address is for driver B (DIG_8 to DIG_15).
 	{
-		SEV_SEG_LOAD_LOW;	//Drop the level of the LOAD pin
-		spi_tradeByte(address);	//Send the register address where the data will be stored
-		spi_tradeByte(data);	//Send the data to be stored
-		spi_tradeByte(0);	//Roll no-op data through to push real data out of driver A and into driver B (address byte)
-		spi_tradeByte(0);	//Roll no-op data through to push real data out of driver A and into driver B (data byte)
-		SEV_SEG_LOAD_HIGH;	//Raise the level of the LOAD pin - this triggers latching of the sent bytes (last 16 bits of data are latched).
+		SEV_SEG_LOAD_LOW;		//Drop the level of the LOAD pin
+		spi_trade_byte(address);	//Send the register address where the data will be stored
+		spi_trade_byte(data);		//Send the data to be stored
+		spi_trade_byte(0);		//Roll no-op data through to push real data out of driver A and into driver B (address byte)
+		spi_trade_byte(0);		//Roll no-op data through to push real data out of driver A and into driver B (data byte)
+		SEV_SEG_LOAD_HIGH;		//Raise the level of the LOAD pin - this triggers latching of the sent bytes (last 16 bits of data are latched).
 	}
-	else				//Not set, therefore address is for driver A (DIG_0 to DIG_7).
+	else					//Not set, therefore address is for driver A (DIG_0 to DIG_7).
 	{
-		SEV_SEG_LOAD_LOW;	//Drop the level of the LOAD pin
-		spi_tradeByte(0);	//Roll no-op data in first for driver B when real data for driver A pushes it through (address byte)
-		spi_tradeByte(0);	//Roll no-op data in first for driver B when real data for driver A pushes it through (data byte)
-		spi_tradeByte(address);	//Send the register address where the data will be stored
-		spi_tradeByte(data);	//Send the data to be stored
-		SEV_SEG_LOAD_HIGH;	//Raise the level of the LOAD pin - this triggers latching of the sent bytes (last 16 bits of data are latched).
+		SEV_SEG_LOAD_LOW;		//Drop the level of the LOAD pin
+		spi_trade_byte(0);		//Roll no-op data in first for driver B when real data for driver A pushes it through (address byte)
+		spi_trade_byte(0);		//Roll no-op data in first for driver B when real data for driver A pushes it through (data byte)
+		spi_trade_byte(address);	//Send the register address where the data will be stored
+		spi_trade_byte(data);		//Send the data to be stored
+		SEV_SEG_LOAD_HIGH;		//Raise the level of the LOAD pin - this triggers latching of the sent bytes (last 16 bits of data are latched).
 	}
 }
 
@@ -52,10 +52,10 @@ void sev_seg_all_clear(void)
 	for (i=8; i>0; i--)	//Counts down through the digits from digit 7 (8) to digit 0 (1).
 	{
 		SEV_SEG_LOAD_LOW;				//Drop the level of the LOAD pin
-		spi_tradeByte(i);				//Push in digit address i (will be in driver B at latch)
-		spi_tradeByte(SEV_SEG_CODEB_BLANK);		//Push in data to clear digit at i (will be in driver B at latch)
-		spi_tradeByte(i);				//Push in digit address i (will be in driver A at latch)
-		spi_tradeByte(SEV_SEG_CODEB_BLANK);		//Push in data to clear digit at i (will be in driver A at latch)
+		spi_trade_byte(i);				//Push in digit address i (will be in driver B at latch)
+		spi_trade_byte(SEV_SEG_CODEB_BLANK);		//Push in data to clear digit at i (will be in driver B at latch)
+		spi_trade_byte(i);				//Push in digit address i (will be in driver A at latch)
+		spi_trade_byte(SEV_SEG_CODEB_BLANK);		//Push in data to clear digit at i (will be in driver A at latch)
 		SEV_SEG_LOAD_HIGH;				//Raise the level of the LOAD pin - triggers latching of the sent bytes (last 16 bits latched).
 	}
 }

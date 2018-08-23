@@ -10,4 +10,4 @@
 //Note, SS Pin (slave select) not defined to allow compatibility with multiple SPI devices on the bus.  Should be defined in device header.
 
 void spi_init(uint8_t polarity, uint8_t phase);	//Will initialise SPI hardware as master device and frequency/16 then enable.
-void spi_tradeByte(uint8_t byte);		//The basic function used to send and receive a byte via SPI
+void spi_trade_byte(uint8_t byte);		//The basic function used to send and receive a byte via SPI

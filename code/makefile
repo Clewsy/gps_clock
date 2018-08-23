@@ -57,7 +57,7 @@ TARGET = gps_clock
 ##
 ##SOURCES=$(TARGET).c usart.c i2c.c ssd1306.c rtc.c
 ##
-SOURCES=$(TARGET).c usart.c spi.c max7219.c
+SOURCES=$(TARGET).c usart.c spi.c max7219.c ds3234.c
 OBJECTS=$(SOURCES:.c=.o)
 HEADERS=$(SOURCES:.c=.h)
 

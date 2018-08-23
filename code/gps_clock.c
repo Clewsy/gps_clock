@@ -9,14 +9,15 @@
 //Initialise the peripherals.
 void hardware_init(void)
 {
-	clock_prescale_set(clock_div_1);	//needs #include <avr/power.h>, prescaler 1 gives clock speed 8MHz
-	power_adc_disable();			//Since it's not needed, disable the ADC and save a bit of power
+	clock_prescale_set(clock_div_1);	//needs #include <avr/power.h>, prescaler 1 gives clock speed 8MHz.
+	power_adc_disable();			//Since it's not needed, disable the ADC and save a bit of power.
 
 	usart_init();				//Initialise the USART to enable serial communications.
 	spi_init(SEV_SEG_POL, SEV_SEG_PHA);	//Initialise the SPI to enable comms with SPI devices.
 						//Note, both spi devices (RTC and max7219) operate in spi mode 3, so spi_init only needs to be called once.
 
-	sev_seg_init();				//Initialise the two cascaded max7219 chips that will drive the 16 7-segment digits.
+	sev_seg_init();				//Initialise the two cascaded max7219 chips that will drive the 16 7-segment digits (spi comms).
+	rtc_init();				//Initialise the hardware for spi comms with the DS3234 RTC.
 
 //	sei();				//Global enable interrups (requires avr/interrupt.h)
 }
@@ -46,10 +47,10 @@ void display_time(uint8_t *time, uint8_t mode)
 	switch (mode & 1)			//Lsb of the mode byte determines sub-bode A or B.
 	{
 		case (0) :			//i.e. MODE_1A or MODE_2A
-			delimiters = 0;		//Do NOT show decimal points between years, months, days, hours, mionutes, seconds.
+			delimiters = 0;		//Do NOT show decimal points between years, months, DATs, hours, mionutes, seconds.
 			break;
 		case (1) :			//i.e. MODE_1B or MODE_2B
-			delimiters = SEV_SEG_DP;//DO show decimal points between years, months, days, hours, mionutes, seconds.
+			delimiters = SEV_SEG_DP;//DO show decimal points between years, months, DATs, hours, mionutes, seconds.
 			break;
 	}
 
@@ -67,11 +68,12 @@ void display_time(uint8_t *time, uint8_t mode)
 		disp_buffer[i] = SEV_SEG_CODEB_BLANK;
 	}
 
-	//This loop will set the display buffer digits for the date components (CEN, YEA, MON, DAY).
+	//This loop will set the display buffer digits for the date components (CEN, YEA, MON, DAT).
 	for (i = 0; i < 8; i++)
 	{
 		disp_buffer[i + date_offset] = time[i];			//"date_offset" determined by current mode.
 	}
+
 	//This loop will set the display buffer digits for the time components (HOU, MIN, SEC).
 	for (i = 8; i < 14; i++)
 	{
@@ -131,8 +133,8 @@ uint8_t sync_time (uint8_t *time)
 			}
 
 			//The next 6 bytes received represent the date but are received in an inconvenient order -> D,D,M,M,Y,Y
-			time[DAY_TENS] = (usart_receive_byte() - '0');	//Date tens
-			time[DAY_ONES] = (usart_receive_byte() - '0');	//Date ones
+			time[DAT_TENS] = (usart_receive_byte() - '0');	//Date tens
+			time[DAT_ONES] = (usart_receive_byte() - '0');	//Date ones
 			time[MON_TENS] = (usart_receive_byte() - '0');	//Month tens
 			time[MON_ONES] = (usart_receive_byte() - '0');	//Month ones
 			time[YEA_TENS] = (usart_receive_byte() - '0');	//Year tens
@@ -152,12 +154,15 @@ uint8_t sync_time (uint8_t *time)
 	{
 		if(time[i] > 9)				//If any element is an integer larger than 9, then the data is no good.
 		{
-			usart_print_string("No good.");	//Print to usart for debugging.
+			//usart_print_string("No good.");	//Print to usart for debugging.
 			return(FALSE);			//If the time data is no good, exit the function and return FALSE.
 		}
+		else
+		{
+			rtc_set_time(time);	//Valid time from GPS so update the real-time clock module.
+			return(TRUE);		//This will only be reached if the function received valid time data from the GPS module, so return TRUE.
+		}
 	}
-
-	return(TRUE);	//This will only be reached if the function received valid time data from the GPS module, so return TRUE.
 }
 
 //Simple startup animation that displays "ISO-8601" then scans the decimal point (DP) right to left then back a few times.
@@ -206,26 +211,25 @@ int main(void)
 {
 	hardware_init();	//initialise the hardware peripherals
 
-	usart_print_string("clock(get_time);\r\n");
+	usart_print_string("\r\nclock(get_time);\r\n");
 
 	sev_seg_startupAni();
 
-	//for debugging - display an integer for 2 seconds
-	//sev_seg_display_int(1234567890180085);
-	//_delay_ms(2000);
-	sev_seg_all_clear();
+	//Attempt to sync rtc time with gps time.
+	if (!sync_time(time))	//If the sync is unsuccessful
+	{
+		sev_seg_display_int(5318008);	//Show a specified integer...
+		_delay_ms(5000);		//...for 5 seconds.
+	}
 
 	while (1)
 	{
-		if(sync_time(time))
-		{
-			display_time(time, MODE_1B);
-		}
-		else
-		{
-			sev_seg_display_int(80085);
-		}
-	}
 
+
+		rtc_get_time(time);		//Update the current time from the rtc.
+		display_time(time, MODE_1B);	//Display the current time.
+
+
+	}
 	return 0;	//Never reached.
 }
