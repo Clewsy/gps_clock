@@ -7,13 +7,17 @@ ISR(BUTTON_PCI_VECTOR)
 
 	if(BUTTON_PINS & (1 << BUTTON_MODE))
 	{
-		mode++;
-		if(mode > MODE_2B)
+		mode++;				//Increment the mode.
+		if(mode > MODE_2B)		//If largest mode value reached.
 		{
-			mode = MODE_1A;
+			mode = MODE_1A;		//Cycle back to first mode.
 		}
 	}
-	while(BUTTON_PINS & (1 << BUTTON_MODE)){};
+	while(BUTTON_PINS & (1 << BUTTON_MODE))	//Keep refreshing the display until the button is released.
+	{
+		rtc_get_time(time);		//Update the current time from the rtc.
+		display_time(time, mode);	//Display the current time.
+	}
 }
 
 //Initialise the peripherals.

@@ -53,7 +53,7 @@
 ////////////////////////////////
 
 //"mode" is altered via interrupt (pin-change triggered by button press).  Initialisation here sets the display mode at boot.
-uint8_t mode = MODE_1A;
+uint8_t mode = MODE_1B;
 
 //Initialise global array "time" which shall include all the time and date data pulled from the RTC or GPS.  Bytes will be binary-coded deciaml (BCD):
 uint8_t time[SIZE_OF_TIME_ARRAY];	//time[0]  = time[CEN_TENS] : Century tens,	1 or 2
