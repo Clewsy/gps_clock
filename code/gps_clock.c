@@ -1,10 +1,20 @@
 #include "gps_clock.h"
 
-//Interrupt subroutine triggered whenever the AVR receives a byte on the serial line (USART).  This was used for debugging.
-//ISR(USART_RX_vect)	//Interrupt subroutine triggered when the USART receives a byte.
-//{
-//	usart_transmit_byte(usart_receive_byte());	//Echos received byte.
-//}
+//The following interrupt sub-routine will be triggered every time there is a change in state of either button.
+ISR(BUTTON_PCI_VECTOR)
+{
+	_delay_ms(BUTTON_DEBOUNCE_DURATION);	//wait for DEBOUNCE_DURATION milliseconds to mitigate effect of switch bounce.
+
+	if(BUTTON_PINS & (1 << BUTTON_MODE))
+	{
+		mode++;
+		if(mode > MODE_2B)
+		{
+			mode = MODE_1A;
+		}
+	}
+	while(BUTTON_PINS & (1 << BUTTON_MODE)){};
+}
 
 //Initialise the peripherals.
 void hardware_init(void)
@@ -19,7 +29,24 @@ void hardware_init(void)
 	sev_seg_init();				//Initialise the two cascaded max7219 chips that will drive the 16 7-segment digits (spi comms).
 	rtc_init();				//Initialise the hardware for spi comms with the DS3234 RTC.
 
-//	sei();				//Global enable interrups (requires avr/interrupt.h)
+
+	PCICR |= (1 << BUTTON_PCIE);		//Enable Pin-Change Interrupt for pin-change int pins PCINT[8-14].  This includes both buttons.
+						//PCICR: Pin-Change Interrupt Control Register
+						//PCIE0: Pin-Change Interrupt Enable 0 (Enables PCINT[7-0] i.e. PB[7-0])
+						//PCIE1: Pin-Change Interrupt Enable 1 (Enables PCINT[14-8] i.e. PC[6-0])
+						//PCIE2: Pin-Change Interrupt Enable 2 (Enables PCINT[23-16] i.e. PD[7-0])
+	BUTTON_PCMSK |= ((1 << BUTTON_MODE) | (1 << BUTTON_SELECT));
+						//Enable Pin-Change Interrupt on PCINT[x] for PCINT pins to which the 5 buttons are connected.
+						//PCMSK0: Pin-Change Mask Register 0 (For PCINT[7-0] i.e. PB[7-0])
+						//PCMSK1: Pin-Change Mask Register 1 (For PCINT[14-8] i.e. PC[6-0])
+						//PCMSK2: Pin-Change Mask Register 2 (For PCINT[23-16] i.e. PD[7-0])
+						//PCINT[0-7]: Pin-Change Interrupt [0-7]. Note PCINT[7-0]: PB[7-0]
+						//PCINT[14-8]: Pin-Change Interrupt [14-8]. Note PCINT[7-0]: PC[6-0]
+						//PCINT[23-16]: Pin-Change Interrupt [23-16]. Note PCINT[7-0]: PD[7-0]
+	BUTTON_PORT |= ((1 << BUTTON_MODE) | (1 << BUTTON_SELECT));
+						//Enable pull-up resistors for the buttons.
+
+	sei();			//Global enable interrups (requires avr/interrupt.h)
 }
 
 //This function sets the display buffer array in accordance with the current time and the selected display mode,
@@ -163,6 +190,8 @@ uint8_t sync_time (uint8_t *time)
 			return(TRUE);		//This will only be reached if the function received valid time data from the GPS module, so return TRUE.
 		}
 	}
+
+	return(FALSE);		//Should not reach this.
 }
 
 //Simple startup animation that displays "ISO-8601" then scans the decimal point (DP) right to left then back a few times.
@@ -227,7 +256,7 @@ int main(void)
 
 
 		rtc_get_time(time);		//Update the current time from the rtc.
-		display_time(time, MODE_1B);	//Display the current time.
+		display_time(time, mode);	//Display the current time.
 
 
 	}

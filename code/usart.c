@@ -15,14 +15,14 @@ void usart_init(void)
 		UCSR0A &= ~(1 << U2X0);
 	#endif
 
-	UCSR0B = (1 << RXCIE0) | (1 << TXEN0) | (1 << RXEN0);		//UCSR0B = USART0 Control and Status Register B
-									//RXCIE0 = USART0 RX Complete Interrupt Enable
-									//TXEN0 = Transmit Enable USART0
-									//RXEN0 = Receive Enable USART0
+	UCSR0B = (1 << TXEN0) | (1 << RXEN0);		//UCSR0B = USART0 Control and Status Register B
+							//RXCIE0 = USART0 RX Complete Interrupt Enable
+							//TXEN0 = Transmit Enable USART0
+							//RXEN0 = Receive Enable USART0
 
-	UCSR0C = (1 << UCSZ01) | (1 << UCSZ00);				//UCSR0C = USART 0 Control and Status Register C
-									//UCSZ12:0 = USART Character Size, Set to 0b011 for 8-bit.
-									//(USBS = Usart Stop Bit Select, Stays at 0b0 for 1 stop bit).
+	UCSR0C = (1 << UCSZ01) | (1 << UCSZ00);		//UCSR0C = USART 0 Control and Status Register C
+							//UCSZ12:0 = USART Character Size, Set to 0b011 for 8-bit.
+							//(USBS = Usart Stop Bit Select, Stays at 0b0 for 1 stop bit).
 }
 
 //Returns a byte as received by the USART.

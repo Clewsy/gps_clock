@@ -7,8 +7,19 @@
 #include "max7219.h"
 #include "ds3234.h"
 
-#define TRUE	1
+#define TRUE	1	//True/false used to determine succeful sync of time from GPS.
 #define FALSE	0
+
+//Following definitions will be used to initialise and read the buttons.
+#define BUTTON_DDR			DDRC		//DDRC: Data Direction Register C - For setting IO to input or output.
+#define BUTTON_PORT			PORTC		//PORTC: Port C - For writing to IO.
+#define BUTTON_PINS			PINC		//PINC: Pin C - For reading from IO.
+#define BUTTON_PCIE			PCIE1		//PCIE1: Pin Change Interrupt Enable 1 - For enabling interrupts on IO level change.
+#define BUTTON_PCMSK			PCMSK1		//PCMSK1: Pin Change Mask Register 1 - For masking which IO lines to trigger interrupt.
+#define BUTTON_MODE			PC0		//PC0: PCINT8
+#define BUTTON_SELECT			PC1		//PC1: PCINT9
+#define BUTTON_PCI_VECTOR		PCINT1_vect	//PCINT1: Pin-Change Interrupt 1 - Define the interrupt sub-routine vector function name.
+#define BUTTON_DEBOUNCE_DURATION	10		//Define the duration in ms to wait to avoide button "bounce".
 
 //Define the display modes
 //Mode 1 shows the date on the left and the time on the right with two blank segments between them.
@@ -36,6 +47,14 @@
 #define SEC_ONES 13
 #define SIZE_OF_TIME_ARRAY 14
 
+
+////////////////////////////////
+//Global Variable Definitions://
+////////////////////////////////
+
+//"mode" is altered via interrupt (pin-change triggered by button press).  Initialisation here sets the display mode at boot.
+uint8_t mode = MODE_1A;
+
 //Initialise global array "time" which shall include all the time and date data pulled from the RTC or GPS.  Bytes will be binary-coded deciaml (BCD):
 uint8_t time[SIZE_OF_TIME_ARRAY];	//time[0]  = time[CEN_TENS] : Century tens,	1 or 2
 					//time[1]  = time[CEN_ONES] : Century ones,	9 or 0
@@ -61,7 +80,9 @@ uint8_t disp_buffer[16];		//disp_buffer[0] = digit 0	<--Least-Significant Digit 
 					//disp_buffer[14] = digit 14
 					//disp_buffer[15] = digit 15	<--Least-Significant Digit (Right)
 
-//Function declarations
+/////////////////////////
+//Function Declarations//
+/////////////////////////
 void hardware_init(void);			//Initialise the peripherals.
 void display_time(uint8_t *time, uint8_t mode);	//Show the current time in accordance with the selected display mode.
 void clear_disp_buffer(void);			//Write data to the display buffer that corresponds to a blank digit (all segments off) for all 16.
