@@ -80,6 +80,18 @@ uint8_t disp_buffer[16];		//disp_buffer[0] = digit 0	<--Least-Significant Digit 
 					//disp_buffer[14] = digit 14
 					//disp_buffer[15] = digit 15	<--Least-Significant Digit (Right)
 
+
+//Global static array declarations for using manual decode mode to print pseudo "text" to the seven-seg displays (i.e. using sev_seg_display_word()).
+static uint8_t syncing[16] = {SEV_SEG_MANUAL_S, SEV_SEG_MANUAL_Y, SEV_SEG_MANUAL_N, SEV_SEG_MANUAL_C, SEV_SEG_MANUAL_I, SEV_SEG_MANUAL_N, SEV_SEG_MANUAL_G,
+	0, 0, 0, 0, 0, 0, 0, 0, 0};	//"SynCIng"
+static uint8_t no_sync[16] = {SEV_SEG_MANUAL_N, SEV_SEG_MANUAL_O, 0, SEV_SEG_MANUAL_S, SEV_SEG_MANUAL_Y, SEV_SEG_MANUAL_N, SEV_SEG_MANUAL_C,
+	0, 0, 0, 0, 0, 0, 0, 0, 0};	//"nO SynC"
+//static uint8_t adjust[16] = {SEV_SEG_MANUAL_A, SEV_SEG_MANUAL_D, SEV_SEG_MANUAL_J, SEV_SEG_MANUAL_U, SEV_SEG_MANUAL_S, SEV_SEG_MANUAL_T,
+//	0, 0, 0, 0, 0, 0, 0, 0, 0, 0};	//"AdJUSt"
+//static uint8_t iso[16] = {0, 0, 0, 0, SEV_SEG_MANUAL_I, SEV_SEG_MANUAL_S, SEV_SEG_MANUAL_O, SEV_SEG_MANUAL_DASH,
+//	SEV_SEG_MANUAL_8, SEV_SEG_MANUAL_6, SEV_SEG_MANUAL_0, SEV_SEG_MANUAL_1, 0, 0, 0, 0};	//"ISO-8601"
+
+
 /////////////////////////
 //Function Declarations//
 /////////////////////////
@@ -88,4 +100,5 @@ void display_time(uint8_t *time, uint8_t mode);	//Show the current time in accor
 void clear_disp_buffer(void);			//Write data to the display buffer that corresponds to a blank digit (all segments off) for all 16.
 void refresh_display(void);			//Take the contents of the display buffer array and send it to the seven segment display drivers.
 uint8_t sync_time (uint8_t *time);		//Update the time array by parsing the date and time from the GPS module.  Returns FALSE if data is invalid.
-void sev_seg_startupAni(void);			////Simple startup animation scans the decimal point (DP) right to left then back a few times.
+void sev_seg_display_word(uint8_t *word, uint16_t duration_ms);		//Use the seven-segment digits to display pseudo "text".
+void sev_seg_startup_ani(void);			////Simple startup animation scans the decimal point (DP) right to left then back a few times.

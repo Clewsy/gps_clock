@@ -13,12 +13,21 @@
 
 //Definitions for use by SPI.c functions
 #define SEV_SEG_LOAD	PB1	//Although MAX7219 is not true SPI, LOAD pin triggers latching (on rising edge) and acts similarly to SS/CS.
+#define SEV_SEG_PORT	PORTB	//Port on which the load pin is found.
 #define SEV_SEG_POL	1	//Set polarity for SPI comms.
 #define SEV_SEG_PHA	1	//Set phase for SPI comms
 
+//Definitions for setting shutdown mode (address SEV_SEG_SHUTDOWN_X)
+#define ON	1
+#define OFF	0
+
+//Definitions for setting the decode mode for all digits (address SEV_SEG_DECODE_MODE_X)
+#define DECODE_CODE_B	0xFF
+#define DECODE_MANUAL	0x00
+
 //Macros for setting the LOAD pin on the MAX7219 low or high.  Serially shifted data is latched into the MAX7219 on a rising edge of LOAD pin.
-#define SEV_SEG_LOAD_HIGH	PORTB |= (1 << SEV_SEG_LOAD)	//Set LOAD pin high
-#define SEV_SEG_LOAD_LOW	PORTB &= ~(1 << SEV_SEG_LOAD)	//Set LOAD pin low
+#define SEV_SEG_LOAD_HIGH	SEV_SEG_PORT |= (1 << SEV_SEG_LOAD)	//Set LOAD pin high
+#define SEV_SEG_LOAD_LOW	SEV_SEG_PORT &= ~(1 << SEV_SEG_LOAD)	//Set LOAD pin low
 
 //Driver A Register Addresses (MSB cleared to identify as driver A in code (MSB ignored my driver))
 #define	SEV_SEG_NO_OP_A		0x00	//No operation (ignore lower byte).
@@ -53,17 +62,24 @@
 #define	SEV_SEG_DISPLAY_TEST_B	0x8F
 
 //Non-code B Data (i.e. manual config of 7 segments)
-#define SEV_SEG_MANUAL_O	0b01111110
-#define SEV_SEG_MANUAL_F	0b01000111
+#define SEV_SEG_MANUAL_0	0b01111110
+#define SEV_SEG_MANUAL_1	0b00110000
+#define SEV_SEG_MANUAL_6	0b01011111
+#define SEV_SEG_MANUAL_8	0b01111111
 #define SEV_SEG_MANUAL_A	0b01110111
-#define SEV_SEG_MANUAL_D	0b00111101
-#define SEV_SEG_MANUAL_J	0b00111100
-#define SEV_SEG_MANUAL_S	0b01011011
-#define SEV_SEG_MANUAL_Y	0b00111011
-#define SEV_SEG_MANUAL_N	0b01110110
 #define SEV_SEG_MANUAL_C	0b01001110
-#define SEV_SEG_MANUAL_I	0b00110000
+#define SEV_SEG_MANUAL_D	0b00111101
+#define SEV_SEG_MANUAL_F	0b01000111
 #define SEV_SEG_MANUAL_G	0b01111011
+#define SEV_SEG_MANUAL_I	0b00110000
+#define SEV_SEG_MANUAL_J	0b00111100
+#define SEV_SEG_MANUAL_N	0b01110110
+#define SEV_SEG_MANUAL_O	0b01111110
+#define SEV_SEG_MANUAL_P	0b01100111
+#define SEV_SEG_MANUAL_S	0b01011011
+#define SEV_SEG_MANUAL_T	0b00111001
+#define SEV_SEG_MANUAL_U	0b00111110
+#define SEV_SEG_MANUAL_Y	0b00111011
 #define SEV_SEG_MANUAL_BLANK	0b00000000
 #define SEV_SEG_MANUAL_DASH	0b00000001
 
@@ -77,5 +93,7 @@
 //MAX7219 control function declarations.
 void sev_seg_write_byte(uint8_t address, uint8_t data);	//Writes a byte to an address the MAX7219s.  One driver will receive data, the other will receive no-op.
 void sev_seg_init(void);				//Initialise both the display drivers.
-void sev_seg_all_clear(void);				//Clears all digits.
+void sev_seg_all_clear(void);				//Clears all digits (needs to be in CODE-B mode).
+void sev_seg_power(uint8_t on_or_off);			//Turns display on or off without changing any other registers.
+void sev_seg_decode_mode(uint8_t decode_mode);		//Sets all digits on both drivers to decode mode "manual" or "code B".
 void sev_seg_display_int(uint64_t num);			//Takse any 64-bit integer and displays the decimal value using the 16 7-seg digits.

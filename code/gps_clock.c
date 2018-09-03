@@ -198,8 +198,34 @@ uint8_t sync_time (uint8_t *time)
 	return(FALSE);		//Should not reach this.
 }
 
+//Display "pseudo-text" on the seven-segment display.
+void sev_seg_display_word(uint8_t *word, uint16_t duration_ms)
+{
+	//Note, display running in "Code B" decode mode when function is entered.  This needs to be changed to manual decode to print text-like characters.
+	sev_seg_all_clear();			//Clear all digits.
+	sev_seg_power(OFF);			//Turn off both display drivers (prevents artifacts when changing to manual decode).
+	sev_seg_decode_mode(DECODE_MANUAL);	//Switch into manual decode mode for all digits.
+
+	for (uint8_t i = 0; i < 16; i++)	//Run a loop to set all 16 digits in the display buffer.
+	{
+		disp_buffer[i] = word[i];	//Copy the word array to the disp_buffer array.
+	}
+	refresh_display();			//Refresh the display in accordance with the buffer.
+	sev_seg_power(ON);			//Switch the display drivers back on.
+
+	while(duration_ms--)			//Keep the "text" displayed for "duration_ms" milliseconds (can't pass variables directly to _delay_ms()).
+	{
+		_delay_ms(1);
+	}
+
+	sev_seg_power(OFF);			//Turn off both display drivers (prevents artifacts when changing back to Code B decode).
+	sev_seg_decode_mode(DECODE_CODE_B);	//Switch back into Code B decode mode for all digits.
+	sev_seg_all_clear();			//Clear all digits (note this function only works in Code B mode).
+	sev_seg_power(ON);			//Switch the display back on (will be blank).
+}
+
 //Simple startup animation that displays "ISO-8601" then scans the decimal point (DP) right to left then back a few times.
-void sev_seg_startupAni(void)
+void sev_seg_startup_ani(void)
 {
 	clear_disp_buffer();		//Start by setting all 16 digits in the buffer to blank (off).
 	refresh_display();		//Refresh the display in accordance with the buffer (i.e. clear all digits);
@@ -246,13 +272,13 @@ int main(void)
 
 	usart_print_string("\r\nclock(get_time);\r\n");
 
-	sev_seg_startupAni();
+	sev_seg_startup_ani();			//Run through the start-up animation.
+	sev_seg_display_word(syncing, 2000);	//Display "SynCIng" for 2 seconds before checking for gps sync.
 
 	//Attempt to sync rtc time with gps time.
-	if (!sync_time(time))	//If the sync is unsuccessful
+	if (!sync_time(time))	//If the sync is unsuccessful...
 	{
-		sev_seg_display_int(5318008);	//Show a specified integer...
-		_delay_ms(5000);		//...for 5 seconds.
+		sev_seg_display_word(no_sync, 3000);	//Display "nO SynC" for 3 seconds.
 	}
 
 	while (1)
