@@ -69,8 +69,10 @@
 #define SEV_SEG_MANUAL_A	0b01110111
 #define SEV_SEG_MANUAL_C	0b01001110
 #define SEV_SEG_MANUAL_D	0b00111101
+#define SEV_SEG_MANUAL_E	0b01001111
 #define SEV_SEG_MANUAL_F	0b01000111
 #define SEV_SEG_MANUAL_G	0b01111011
+#define SEV_SEG_MANUAL_H	0b00110111
 #define SEV_SEG_MANUAL_I	0b00110000
 #define SEV_SEG_MANUAL_J	0b00111100
 #define SEV_SEG_MANUAL_N	0b01110110
@@ -84,8 +86,12 @@
 #define SEV_SEG_MANUAL_DASH	0b00000001
 
 //Code B Data - pass to digit registers if code B font is enabled.  Note, DP set by MSB.
-#define SEV_SEG_CODEB_BLANK	0x0F	//All segments off (inc. DP).
 #define SEV_SEG_CODEB_DASH	0x0A	//G segment only (i.e. a "-") (note, DP off)
+#define SEV_SEG_CODEB_E		0x0B	//Code B encoded for displaying character 'E'
+#define SEV_SEG_CODEB_H		0x0C	//Code B encoded for displaying character 'H'
+#define SEV_SEG_CODEB_L		0x0D	//Code B encoded for displaying character 'L'
+#define SEV_SEG_CODEB_P		0x0E	//Code B encoded for displaying character 'P'
+#define SEV_SEG_CODEB_BLANK	0x0F	//All segments off (inc. DP).
 
 //OR with data sent to digit to turn on the decimal point (i.e. MSb toggles the DP).
 #define SEV_SEG_DP	0x80

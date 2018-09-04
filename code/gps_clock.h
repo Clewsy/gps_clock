@@ -25,10 +25,11 @@
 //Mode 1 shows the date on the left and the time on the right with two blank segments between them.
 //Mode 2 shows the date and time together with no gap but a blank digit either side of the full date/time.
 //Sub-modes A/B determine if the decimal points will be shown between individual components of the date/time.
-#define MODE_1A	0b00	//	|Y Y Y Y M M D D     H H M M S S |
-#define MODE_1B	0b01	//	|Y Y Y Y.M M.D D.    H H.M M.S S.|
-#define MODE_2A	0b10	//	|  Y Y Y Y M M D D H H M M S S   |
-#define MODE_2B	0b11	//	|  Y Y Y Y.M M.D D.H H.M M.S S.  |
+#define MODE_1A	0b000	//	|Y Y Y Y M M D D     H H M M S S |	ISO-8601 with date/time separation, no delimiters.
+#define MODE_1B	0b001	//	|Y Y Y Y.M M.D D.    H H.M M.S S.|	ISO-8601 with date/time separation with delimiters (decimal points).
+#define MODE_2A	0b010	//	|  Y Y Y Y M M D D H H M M S S   |	ISO-8601 centered, no delimiters.
+#define MODE_2B	0b011	//	|  Y Y Y Y.M M.D D.H H.M M.S S.  |	ISO-8601 centered with delimiters (decimal points).
+#define MODE_3	0b100	//	|E P O C H   S S S S S S S S S S |	Epoch time (seconds elapsed since midnight, Jan 1st, 1970).  Aka UNIX time.
 
 //Define array elements for easier identification when pulled from time array.
 #define CEN_TENS 0
@@ -47,10 +48,34 @@
 #define SEC_ONES 13
 #define SIZE_OF_TIME_ARRAY 14
 
+//These definitions are used to make the calculation of epoch time much more readable.
+//Epoch time (or unix epoch time) is the number of seconds elapsed since 0hrs, January first, 1970.
+#define DAYS_IN_4_YEARS		1461		// = ((365days * 4years) + 1leap-day)
+#define SECONDS_IN_A_DAY	86400		// = 60seconds * 60minutes * 24hours
+#define SECONDS_IN_AN_HOUR	3600		// = 60seconds * 60minutes
+#define SECONDS_IN_A_MINUTE	60
+#define EPOCH_SECONDS_TO_2000	946684800	// = Seconds elapsed from epoch (midnight, Jan 1st, 1970) until midnight, Jan 1st, 2000.
+#define EPOCH_YEAR		(uint32_t) ((10*time[YEA_TENS]) + time[YEA_ONES])	// 0-99		= Years since 2000.
+#define EPOCH_MONTH		(uint32_t) ((10*time[MON_TENS]) + time[MON_ONES])	// 1-12		= Months since start of current year.
+#define EPOCH_DAY		(uint32_t) ((10*time[DAT_TENS]) + time[DAT_ONES])	// 1-31		= Days since start of current month.
+#define EPOCH_HOUR		(uint32_t) ((10*time[HOU_TENS]) + time[HOU_ONES])	// 0-23		= Hours since start of current day.
+#define EPOCH_MINUTE		(uint32_t) ((10*time[MIN_TENS]) + time[MIN_ONES])	// 0-59		= Minutes since start of current hour.
+#define EPOCH_SECOND		(uint32_t) ((10*time[SEC_TENS]) + time[SEC_ONES])	// 0-59		= Seconds since start of current minute.
 
-////////////////////////////////
-//Global Variable Definitions://
-////////////////////////////////
+//The following 2-dimensional array serves as a look-up table to determine the number of days elapsed within the current 4-year block.
+//This is required so that leap-days are included when calculating epoch time.
+const static uint16_t days_table[4][12] =
+{	//Jan  Feb  Mar  Apr  May  Jun  Jul  Aug  Sep  Oct  Nov  Dec
+	{   0,  31,  60,  91, 121, 152, 182, 213, 244, 274, 305, 335},	//First year (leap year).
+	{ 366, 397, 425, 456, 486, 517, 547, 578, 609, 639, 670, 700},	//Second year.
+	{ 731, 762, 790, 821, 851, 882, 912, 943, 974,1004,1035,1065},	//Third year.
+	{1096,1127,1155,1186,1216,1247,1277,1308,1339,1369,1400,1430},	//Fourth year.
+};
+
+
+////////////////////////////////////
+//Global Variable Initialisations://
+////////////////////////////////////
 
 //"mode" is altered via interrupt (pin-change triggered by button press).  Initialisation here sets the display mode at boot.
 uint8_t mode = MODE_1B;
@@ -60,10 +85,10 @@ uint8_t time[SIZE_OF_TIME_ARRAY];	//time[0]  = time[CEN_TENS] : Century tens,	1 
 					//time[1]  = time[CEN_ONES] : Century ones,	9 or 0
 					//time[2]  = time[YEA_TENS] : Year tens,	0 to 9
 					//time[3]  = time[YEA_ONES] : Year ones,	0 to 9
-					//time[4]  = time[MON_TENS] : Month tens,	0 to 1
+					//time[4]  = time[MON_TENS] : Month tens,	1 to 2
 					//time[6]  = time[MON_ONES] : Month ones,	0 to 9
 					//time[5]  = time[DAT_TENS] : DAT tens,		0 to 3
-					//time[7]  = time[DAT_ONES] : DAT ones,		0 to 9
+					//time[7]  = time[DAT_ONES] : DAT ones,		1 to 9
 					//time[8]  = time[HOU_TENS] : Hour tens,	0 to 2
 					//time[9]  = time[HOU_ONES] : Hour ones,	0 to 9
 					//time[10] = time[MIN_TENS] : Minute tens,	0 to 5
@@ -86,6 +111,7 @@ static uint8_t syncing[16] = {SEV_SEG_MANUAL_S, SEV_SEG_MANUAL_Y, SEV_SEG_MANUAL
 	0, 0, 0, 0, 0, 0, 0, 0, 0};	//"SynCIng"
 static uint8_t no_sync[16] = {SEV_SEG_MANUAL_N, SEV_SEG_MANUAL_O, 0, SEV_SEG_MANUAL_S, SEV_SEG_MANUAL_Y, SEV_SEG_MANUAL_N, SEV_SEG_MANUAL_C,
 	0, 0, 0, 0, 0, 0, 0, 0, 0};	//"nO SynC"
+static uint8_t epoch_text[5] = {SEV_SEG_MANUAL_E, SEV_SEG_MANUAL_P, SEV_SEG_MANUAL_O, SEV_SEG_MANUAL_C, SEV_SEG_MANUAL_H};
 //static uint8_t adjust[16] = {SEV_SEG_MANUAL_A, SEV_SEG_MANUAL_D, SEV_SEG_MANUAL_J, SEV_SEG_MANUAL_U, SEV_SEG_MANUAL_S, SEV_SEG_MANUAL_T,
 //	0, 0, 0, 0, 0, 0, 0, 0, 0, 0};	//"AdJUSt"
 //static uint8_t iso[16] = {0, 0, 0, 0, SEV_SEG_MANUAL_I, SEV_SEG_MANUAL_S, SEV_SEG_MANUAL_O, SEV_SEG_MANUAL_DASH,
