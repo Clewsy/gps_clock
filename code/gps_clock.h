@@ -2,6 +2,7 @@
 #include <avr/power.h>
 #include <avr/interrupt.h>	//Requires to use interrupt macros such ase sei();
 #include <util/delay.h>		//From the standard AVR libraries - used to call delay_ms() and delay_us() functions.
+#include <stdlib.h>
 #include "usart.h"
 #include "spi.h"
 #include "max7219.h"
@@ -30,7 +31,7 @@
 #define MODE_2A	0b010	//	|  Y Y Y Y M M D D H H M M S S   |	ISO-8601 centered, no delimiters.
 #define MODE_2B	0b011	//	|  Y Y Y Y.M M.D D.H H.M M.S S.  |	ISO-8601 centered with delimiters (decimal points).
 #define MODE_3	0b100	//	|E P O C H   S S S S S S S S S S |	Epoch time (seconds elapsed since midnight, Jan 1st, 1970).  Aka UNIX time.
-#define MODE_4	0b101	//	|U t C   O F F S E T       # #.# |
+#define MODE_4	0b101	//	|A d J U S t             ± # #.# |	Enable setting of the time offset from UTC.
 
 //Define array elements for easier identification when pulled from time array.
 #define CEN_TENS 0
@@ -128,9 +129,11 @@ static uint8_t adjust[8] = {SEV_SEG_MANUAL_A, SEV_SEG_MANUAL_D, SEV_SEG_MANUAL_J
 //Function Declarations//
 /////////////////////////
 void hardware_init(void);			//Initialise the peripherals.
-void display_time(uint8_t *time, uint8_t mode);	//Show the current time in accordance with the selected display mode.
+void poll(void);				//Poll the current selected mode and run the according function.
+void display_iso_time(void);			//Display the time in a standard ISO-8601 format.
 void clear_disp_buffer(void);			//Write data to the display buffer that corresponds to a blank digit (all segments off) for all 16.
 void refresh_display(void);			//Take the contents of the display buffer array and send it to the seven segment display drivers.
+void display_epoch_time(void);			//Display UNIX Epoch time (seconds elapsed since 1970.01.01.00.00.00).
 void get_offset(void);				//Enables alteration of the time offset from UTC (time data from the GPS module is always UTC).
 void display_offset(void);			//Display the current offset value using the last 3 digits (-11.5 to 12.0).
 void cycle_offset(void);			//Increment the offset value by half an hour and rollover when maximum valid value is exceeded.

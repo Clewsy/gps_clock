@@ -8,16 +8,17 @@ ISR(BUTTON_PCI_VECTOR)
 	//If statement captures press of the "Mode" button.  Cycles through the various display modes.
 	if(!(BUTTON_PINS & (1 << BUTTON_MODE)))
 	{
-		sev_seg_all_clear();		//Clear all digits to avoid artifacts between display modes.
-		mode++;				//Increment the mode.
-		if(mode > MODE_4)		//If largest mode value reached.
+		sev_seg_decode_mode(DECODE_CODE_B);	//Whenever the mode is changed, return all digits to default Code B decode mode.
+		sev_seg_all_clear();			//Clear all digits to avoid artifacts between display modes.
+		mode++;					//Increment the mode.
+		if(mode > MODE_4)			//If largest mode value reached.
 		{
-			mode = MODE_1A;		//Cycle back to first mode.
+			mode = MODE_1A;			//Cycle back to first mode.
 		}
 		while(BUTTON_PINS & (1 << BUTTON_MODE))	//Keep refreshing the display until the button is released.
 		{
 			rtc_get_time(time);		//Update the current time from the rtc.
-			display_time(time, mode);	//Display the current time.
+			poll();				//Display the current time.
 		}
 	}
 
@@ -68,18 +69,9 @@ void hardware_init(void)
 	sei();			//Global enable interrups (requires avr/interrupt.h)
 }
 
-//This function sets the display buffer array in accordance with the current time and the selected display mode,
-// then requests a display update in accordance with the display buffer.
-void display_time(uint8_t *time, uint8_t mode)
+//This function will call other functions depending on the currently selected display mode.
+void poll(void)
 {
-	//These initialisations are required for modes 1A, 1B, 2A and 2B (displays ISO-8601 date-time)
-	uint8_t date_offset = 0;	//This offset will determine which digit the date will start at.
-	uint8_t time_offset = 0;	//This offset will determine how many digits after the date that the time will start.
-	uint8_t delimiters = 0;		//This flag will be used to activate the decimal point if the current mode requires it.
-
-	//This initialisation is required for mode 3 (displays epoch time).
-	uint64_t epoch = 0;
-
 	switch (mode)	//Thhis switch is used to setup the display depending on which mode is selected.
 	{
 		//Modes 1A, 1B, 2A and 2B are all variations on the ISO-8601 date/time display.
@@ -87,93 +79,85 @@ void display_time(uint8_t *time, uint8_t mode)
 		case (MODE_1B) :	//	|Y Y Y Y.M M.D D.    H H.M M.S S.|
 		case (MODE_2A) :	//	|  Y Y Y Y M M D D H H M M S S   |
 		case (MODE_2B) :	//	|  Y Y Y Y.M M.D D.H H.M M.S S.  |
-
-			sev_seg_decode_mode(DECODE_CODE_B);	//Modes 1A, 1B, 2A and 2B all require Code B decoding to work (digits only, no alpha chars).
-
-			//This switch used to set the positions of the date and time within the 16-digit display.
-			switch (mode)
-			{
-				case (MODE_1A) :
-				case (MODE_1B) :
-					date_offset = 0;	//Start date display at the first digit (digit 0).
-					time_offset = 2;	//Leave two digits blank after the date and before the time.
-				break;
-
-				case (MODE_2A) :
-				case (MODE_2B) :
-					date_offset = 1;	//Start date display at the second digit (digit 1).
-					time_offset = 0;	//Start time display immediately after date display.
-				break;
-			}
-
-			//This switch used to determine whether or not delimiters are to be used (decimal point between time/date components).
-			switch (mode)
-			{
-				case (MODE_1A) :
-				case (MODE_2A) :
-					delimiters = 0;		//Do NOT show decimal points between years, months, DATs, hours, mionutes, seconds.
-				break;
-
-				case (MODE_1B) :
-				case (MODE_2B) :
-					delimiters = SEV_SEG_DP;//DO show decimal points between years, months, DATs, hours, mionutes, seconds.
-				break;
-			}
-
-			uint8_t i;	//General use integer for running for loops.
-
-			//This loop will apply the decimal point flag to the last digit of each date/time component IF "delimiters" is set my the operating mode.
-			for (i = 3; i < 14; i += 2)
-			{
-				time[i] |= delimiters;	//"delimiters" is either 0 (no effect) or SEV_SEG_DP which will set the decimal point flag for the sev-seg drivers.
-			}
-
-			//This loop will clear every digit in the display buffer in case the mode has changed.
-			for (i = 0; i < 16; i++)
-			{
-				disp_buffer[i] = SEV_SEG_CODEB_BLANK;
-			}
-
-			//This loop will set the display buffer digits for the date components (CEN, YEA, MON, DAT).
-			for (i = 0; i < 8; i++)
-			{
-				disp_buffer[i + date_offset] = time[i];			//"date_offset" determined by current mode.
-			}
-
-			//This loop will set the display buffer digits for the time components (HOU, MIN, SEC).
-			for (i = 8; i < 14; i++)
-			{
-				disp_buffer[i + date_offset + time_offset] = time[i];	//"time_offset" determined by current mode.
-			}
-
-			refresh_display();	//send the display buffer data to the sev-seg display drivers.
+			display_iso_time();
 		break;
 
 		//Mode 3 displays Epoch time (unix time) which is the number of seconds since midnight, January first, 1970 (i.e. 19700101000000).
 		case (MODE_3) :		//	|E P O C H   S S S S S S S S S S |
-
-			sev_seg_write_byte(SEV_SEG_DECODE_MODE_A, 0b11000000);		//Set the first 5 digits (0-4) to manual decode to display text.
-			for (uint8_t i = 0; i < 6; i++)					//For loop runs through the first 6 digits (0-5).
-			{
-				sev_seg_write_byte(SEV_SEG_DIGIT_0 + i, epoch_text[i]);	//Write the pseudo-text "EPOCH-"
-			}
-
-			//Time to calculate the epoch time.  This will work for any date time from Jan 1st 2000 until Dec 31st 2100.
-			epoch =  EPOCH_SECONDS_TO_2000;						//Seconds elapsed from 19700101000000 to 20000101000000.
-			epoch += (EPOCH_YEAR/4) * DAYS_IN_4_YEARS * SECONDS_IN_A_DAY;		//Seconds elapsed in full 4-year blocks since 2000.
-			epoch += days_table[EPOCH_YEAR % 4][EPOCH_MONTH - 1] * SECONDS_IN_A_DAY;//Seconds elapsed in current 4-year block to start of month.
-			epoch += (EPOCH_DAY -1) * SECONDS_IN_A_DAY;				//Seconds elapsed since start of month to start of day.
-			epoch += EPOCH_HOUR * SECONDS_IN_AN_HOUR;				//Seconds elapsed since start of day to start of hour.
-			epoch += EPOCH_MINUTE * SECONDS_IN_A_MINUTE;				//Seconds elapsed since start of hour to to start of minute.
-			epoch += EPOCH_SECOND;							//Seconds elapsed since start of minute.
-
-		    	sev_seg_display_int(epoch);	//We have the epoch value so display it (next to "EPOCH" text).
+			display_epoch_time();
 		break;
 
-		case (MODE_4) :
+		//Mode 4 allows setting the UTC time offset (-11.5hrs to +12.0hrs).
+		case (MODE_4) :		//	|A d J U S t             ± # #.# |
 			get_offset();
 		break;
 	}
+}
+
+//Display the time in a standard ISO-8601 format.
+void display_iso_time(void)
+{
+	uint8_t date_offset = 0;	//This offset will determine which digit the date will start at.
+	uint8_t time_offset = 0;	//This offset will determine how many digits after the date that the time will start.
+	uint8_t delimiters = 0;		//This flag will be used to activate the decimal point if the current mode requires it.
+
+	//This switch used to set the positions of the date and time within the 16-digit display.
+	switch (mode)
+	{
+		case (MODE_1A) :
+		case (MODE_1B) :
+			date_offset = 0;	//Start date display at the first digit (digit 0).
+			time_offset = 2;	//Leave two digits blank after the date and before the time.
+		break;
+
+		case (MODE_2A) :
+		case (MODE_2B) :
+			date_offset = 1;	//Start date display at the second digit (digit 1).
+			time_offset = 0;	//Start time display immediately after date display.
+		break;
+	}
+
+	//This switch used to determine whether or not delimiters are to be used (decimal point between time/date components).
+	switch (mode)
+	{
+		case (MODE_1A) :
+		case (MODE_2A) :
+			delimiters = 0;		//Do NOT show decimal points between years, months, DATs, hours, mionutes, seconds.
+		break;
+
+		case (MODE_1B) :
+		case (MODE_2B) :
+			delimiters = SEV_SEG_DP;//DO show decimal points between years, months, DATs, hours, mionutes, seconds.
+		break;
+	}
+
+	uint8_t i;	//General use integer for running for loops.
+
+	//This loop will apply the decimal point flag to the last digit of each date/time component IF "delimiters" is set my the operating mode.
+	for (i = 3; i < 14; i += 2)
+	{
+		time[i] |= delimiters;	//"delimiters" is either 0 (no effect) or SEV_SEG_DP which will set the decimal point flag for the sev-seg drivers.
+	}
+
+	//This loop will clear every digit in the display buffer in case the mode has changed.
+	for (i = 0; i < 16; i++)
+	{
+		disp_buffer[i] = SEV_SEG_CODEB_BLANK;
+	}
+
+	//This loop will set the display buffer digits for the date components (CEN, YEA, MON, DAT).
+	for (i = 0; i < 8; i++)
+	{
+		disp_buffer[i + date_offset] = time[i];			//"date_offset" determined by current mode.
+	}
+
+	//This loop will set the display buffer digits for the time components (HOU, MIN, SEC).
+	for (i = 8; i < 14; i++)
+	{
+		disp_buffer[i + date_offset + time_offset] = time[i];	//"time_offset" determined by current mode.
+	}
+
+	refresh_display();	//send the display buffer data to the sev-seg display drivers.
 }
 
 //This function will write data to the display buffer that corresponds to a blank digit (all segments off) for all 16.
@@ -195,6 +179,29 @@ void refresh_display(void)
 	}
 }
 
+void display_epoch_time(void)
+{
+	//Initialisation of the epoch variable (number of seconds elapsed since 1970.01.01.00.00.00.
+	uint64_t epoch = 0;
+
+	sev_seg_write_byte(SEV_SEG_DECODE_MODE_A, 0b11000000);		//Set the first 5 digits (0-4) to manual decode to display text.
+	for (uint8_t i = 0; i < 6; i++)					//For loop runs through the first 6 digits (0-5).
+	{
+		sev_seg_write_byte(SEV_SEG_DIGIT_0 + i, epoch_text[i]);	//Write the pseudo-text "EPOCH-"
+	}
+
+	//Time to calculate the epoch time.  This will work for any date time from Jan 1st 2000 until Dec 31st 2100.
+	epoch =  EPOCH_SECONDS_TO_2000;						//Seconds elapsed from 19700101000000 to 20000101000000.
+	epoch += (EPOCH_YEAR/4) * DAYS_IN_4_YEARS * SECONDS_IN_A_DAY;		//Seconds elapsed in full 4-year blocks since 2000.
+	epoch += days_table[EPOCH_YEAR % 4][EPOCH_MONTH - 1] * SECONDS_IN_A_DAY;//Seconds elapsed in current 4-year block to start of month.
+	epoch += (EPOCH_DAY -1) * SECONDS_IN_A_DAY;				//Seconds elapsed since start of month to start of day.
+	epoch += EPOCH_HOUR * SECONDS_IN_AN_HOUR;				//Seconds elapsed since start of day to start of hour.
+	epoch += EPOCH_MINUTE * SECONDS_IN_A_MINUTE;				//Seconds elapsed since start of hour to to start of minute.
+	epoch += EPOCH_SECOND;							//Seconds elapsed since start of minute.
+
+	sev_seg_display_int(epoch);	//We have the epoch value so display it (next to "EPOCH-" text).
+}
+
 //Allow the UTC offset to be adjusted by pressing the "Sync" button.  Valid UTC offsets are in half-hour increments from -11.5 to 12.0.
 //(Note, to avoid using floats, the actual offset value is an integer from -115 to 120)
 void get_offset(void)
@@ -209,7 +216,6 @@ void get_offset(void)
 		}
 		display_offset();						//Display the current offset value using the last 4 digits (12-15).
 	}
-	sev_seg_decode_mode(DECODE_CODE_B);				//When the mode is changed, return all digits to default Code B decode mode.
 }
 
 //Display the current offset value using the last 4 digits (12-15).
@@ -402,7 +408,7 @@ int main(void)
 	{
 
 		rtc_get_time(time);		//Update the current time from the rtc.
-		display_time(time, mode);	//Display the current time.
+		poll();	//Display the current time.
 
 
 	}
