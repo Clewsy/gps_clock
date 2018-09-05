@@ -30,6 +30,7 @@
 #define MODE_2A	0b010	//	|  Y Y Y Y M M D D H H M M S S   |	ISO-8601 centered, no delimiters.
 #define MODE_2B	0b011	//	|  Y Y Y Y.M M.D D.H H.M M.S S.  |	ISO-8601 centered with delimiters (decimal points).
 #define MODE_3	0b100	//	|E P O C H   S S S S S S S S S S |	Epoch time (seconds elapsed since midnight, Jan 1st, 1970).  Aka UNIX time.
+#define MODE_4	0b101	//	|U t C   O F F S E T       # #.# |
 
 //Define array elements for easier identification when pulled from time array.
 #define CEN_TENS 0
@@ -64,6 +65,7 @@
 
 //The following 2-dimensional array serves as a look-up table to determine the number of days elapsed within the current 4-year block.
 //This is required so that leap-days are included when calculating epoch time.
+//Each element represents the number of days elapsed from the start of the 4-year block to the start of the selected month.
 static uint16_t days_table[4][12] =
 {	//Jan  Feb  Mar  Apr  May  Jun  Jul  Aug  Sep  Oct  Nov  Dec
 	{   0,  31,  60,  91, 121, 152, 182, 213, 244, 274, 305, 335},	//First year (leap year).
@@ -79,6 +81,11 @@ static uint16_t days_table[4][12] =
 
 //"mode" is altered via interrupt (pin-change triggered by button press).  Initialisation here sets the display mode at boot.
 uint8_t mode = MODE_1B;
+
+//"offset" represents the time offset from UTC.  The GPS data always returns UTC so an offset is required to get local time and allow for DST.
+//Valid offsets are half-hour increments from -11.5 hours to +12.0 hours.
+//To avoid using floats, offset actually ranges from -115 to 120 and is adjusted in increments of 5 (representing half an hour).
+int8_t offset = 0;
 
 //Initialise global array "time" which shall include all the time and date data pulled from the RTC or GPS.  Bytes will be binary-coded deciaml (BCD):
 uint8_t time[SIZE_OF_TIME_ARRAY];	//time[0]  = time[CEN_TENS] : Century tens,	1 or 2
@@ -113,11 +120,8 @@ static uint8_t no_sync[16] = {SEV_SEG_MANUAL_N, SEV_SEG_MANUAL_O, 0, SEV_SEG_MAN
 	0, 0, 0, 0, 0, 0, 0, 0, 0};	//"nO SynC"
 static uint8_t success[16] = {SEV_SEG_MANUAL_S, SEV_SEG_MANUAL_U, SEV_SEG_MANUAL_C, SEV_SEG_MANUAL_C, SEV_SEG_MANUAL_E, SEV_SEG_MANUAL_S, SEV_SEG_MANUAL_S,
 	0, 0, 0, 0, 0, 0, 0, 0, 0};	//"SynCIng"
-static uint8_t epoch_text[6] = {SEV_SEG_MANUAL_E, SEV_SEG_MANUAL_P, SEV_SEG_MANUAL_O, SEV_SEG_MANUAL_C, SEV_SEG_MANUAL_H, SEV_SEG_MANUAL_DASH};
-//static uint8_t adjust[16] = {SEV_SEG_MANUAL_A, SEV_SEG_MANUAL_D, SEV_SEG_MANUAL_J, SEV_SEG_MANUAL_U, SEV_SEG_MANUAL_S, SEV_SEG_MANUAL_T,
-//	0, 0, 0, 0, 0, 0, 0, 0, 0, 0};	//"AdJUSt"
-//static uint8_t iso[16] = {0, 0, 0, 0, SEV_SEG_MANUAL_I, SEV_SEG_MANUAL_S, SEV_SEG_MANUAL_O, SEV_SEG_MANUAL_DASH,
-//	SEV_SEG_MANUAL_8, SEV_SEG_MANUAL_6, SEV_SEG_MANUAL_0, SEV_SEG_MANUAL_1, 0, 0, 0, 0};	//"ISO-8601"
+static uint8_t epoch_text[6] = {SEV_SEG_MANUAL_E, SEV_SEG_MANUAL_P, SEV_SEG_MANUAL_O, SEV_SEG_MANUAL_C, SEV_SEG_MANUAL_H, SEV_SEG_MANUAL_DASH};	//"EPOCH-"
+static uint8_t adjust[8] = {SEV_SEG_MANUAL_A, SEV_SEG_MANUAL_D, SEV_SEG_MANUAL_J, SEV_SEG_MANUAL_U, SEV_SEG_MANUAL_S, SEV_SEG_MANUAL_T, 0, 0};	//"AdJUSt  "
 
 
 /////////////////////////
@@ -127,6 +131,9 @@ void hardware_init(void);			//Initialise the peripherals.
 void display_time(uint8_t *time, uint8_t mode);	//Show the current time in accordance with the selected display mode.
 void clear_disp_buffer(void);			//Write data to the display buffer that corresponds to a blank digit (all segments off) for all 16.
 void refresh_display(void);			//Take the contents of the display buffer array and send it to the seven segment display drivers.
+void get_offset(void);				//Enables alteration of the time offset from UTC (time data from the GPS module is always UTC).
+void display_offset(void);			//Display the current offset value using the last 3 digits (-11.5 to 12.0).
+void cycle_offset(void);			//Increment the offset value by half an hour and rollover when maximum valid value is exceeded.
 uint8_t sync_time (uint8_t *time);		//Update the time array by parsing the date and time from the GPS module.  Returns FALSE if data is invalid.
 void attempt_sync(void);			//Attempt to sync the RTC time with GPS data.  Display status with pseudo-text.
 void sev_seg_display_word(uint8_t *word, uint16_t duration_ms);		//Use the seven-segment digits to display pseudo "text".

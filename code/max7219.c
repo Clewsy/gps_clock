@@ -88,7 +88,7 @@ void sev_seg_decode_mode(uint8_t decode_mode)
 void sev_seg_display_int(uint64_t num)
 {
 	int i = SEV_SEG_DIGIT_15;			//First digit (least-sig) will be displayed on 7-seg digit 15 (far right).
-	while(num>0)					//Loop until the 64-bit integer has been divided to zero.
+	while(num > 0)					//Loop until the 64-bit integer has been divided to zero.
 	{
 		sev_seg_write_byte(i, (num % 10));	//Write the digit (num modulus 10 gives remainder i.e. 'ones' of the integer)
 		num /= 10;				//Divide num by 10 so that next iteration of loop will determine the next digit.  I.e. remove LS digit.

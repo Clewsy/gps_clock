@@ -10,7 +10,7 @@ ISR(BUTTON_PCI_VECTOR)
 	{
 		sev_seg_all_clear();		//Clear all digits to avoid artifacts between display modes.
 		mode++;				//Increment the mode.
-		if(mode > MODE_3)		//If largest mode value reached.
+		if(mode > MODE_4)		//If largest mode value reached.
 		{
 			mode = MODE_1A;		//Cycle back to first mode.
 		}
@@ -24,7 +24,14 @@ ISR(BUTTON_PCI_VECTOR)
 	//If statement captures press of the "Sync" button.  Initiates at attempt at syncing RTC clock to GPS data.
 	if(!(BUTTON_PINS & (1 << BUTTON_SYNC)))
 	{
-		attempt_sync();		//Attempt to sync the RTC time with GPS data.
+		if (mode == MODE_4)		//Special case: if mode 4 is running, the Sync button cycles the UTC offset.
+		{
+			cycle_offset();		//Cycle the UTC offset value (-11.5hrs to +12.0hrs).
+		}
+		else				//All other modes, the Sync button attempts to sync the clock.
+		{
+			attempt_sync();		//Attempt to sync the RTC time with GPS data.
+		}
 	}
 }
 
@@ -162,8 +169,11 @@ void display_time(uint8_t *time, uint8_t mode)
 
 		    	sev_seg_display_int(epoch);	//We have the epoch value so display it (next to "EPOCH" text).
 		break;
-	}
 
+		case (MODE_4) :
+			get_offset();
+		break;
+	}
 }
 
 //This function will write data to the display buffer that corresponds to a blank digit (all segments off) for all 16.
@@ -182,6 +192,50 @@ void refresh_display(void)
 	{
 		sev_seg_write_byte(SEV_SEG_DIGIT_0 + i, disp_buffer[i]);	//Send the digit for driver A (digits 0 to 7).
 		sev_seg_write_byte(SEV_SEG_DIGIT_8 + i, disp_buffer[i+8]);	//Send the digit for driver B (digits 8 to 15).
+	}
+}
+
+//Allow the UTC offset to be adjusted by pressing the "Sync" button.  Valid UTC offsets are in half-hour increments from -11.5 to 12.0.
+//(Note, to avoid using floats, the actual offset value is an integer from -115 to 120)
+void get_offset(void)
+{
+	sev_seg_all_clear();						//Clear all digits to prevent artifacts from previous mode.
+	sev_seg_write_byte(SEV_SEG_DECODE_MODE_A, 0x00);		//Set the first 8 digits (0-7) to manual decode to display text.
+	while (mode == MODE_4)						//Run the following loop until the mode is changed.
+	{
+		for (uint8_t i = 0; i < 8; i++)					//For loop runs through the first 8 digits (0-7).
+		{
+			sev_seg_write_byte(SEV_SEG_DIGIT_0 + i, adjust[i]);	//Write the pseudo-text "AdJUSt  "
+		}
+		display_offset();						//Display the current offset value using the last 4 digits (12-15).
+	}
+	sev_seg_decode_mode(DECODE_CODE_B);				//When the mode is changed, return all digits to default Code B decode mode.
+}
+
+//Display the current offset value using the last 4 digits (12-15).
+void display_offset(void)
+{
+	if (offset < 0)								//If the current offset is less than zero...
+	{
+		sev_seg_write_byte(SEV_SEG_DIGIT_12, SEV_SEG_CODEB_DASH);	//Print a minus sign (dash) before the offset value.
+	}
+	else
+	{
+		sev_seg_write_byte(SEV_SEG_DIGIT_12, SEV_SEG_CODEB_BLANK);	//Otherwise keep digit 12 blank for positive offsets.
+	}
+	sev_seg_write_byte(SEV_SEG_DIGIT_13, abs(offset) / 100);			//Display the tens of the offset value.
+	sev_seg_write_byte(SEV_SEG_DIGIT_14, ((abs(offset) / 10) % 10) | SEV_SEG_DP);	//Display the ones of the offset value.
+	sev_seg_write_byte(SEV_SEG_DIGIT_15, (abs(offset) % 10));			//Display the .0 or .5 of the offset value.
+}
+
+//Increment the offset value and rollover when maximum value is exceeded.
+//This function is called when the "Sync" button is pressed only when running Mode 4.
+void cycle_offset(void)
+{
+	offset += 5;			//Increment offset by 5.
+	if (offset > 120)		//If maximum valid value (120) is exceeded...
+	{
+		offset = -115;		//Rollover to minimum valid value (-115).
 	}
 }
 
