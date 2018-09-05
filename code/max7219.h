@@ -62,6 +62,12 @@
 #define	SEV_SEG_DISPLAY_TEST_B	0x8F
 
 //Non-code B Data (i.e. manual config of 7 segments)
+//	Segments represented by bits:
+//	MSb-> DP A B C D E F G <-LSb
+//	  _A_
+//	F|_G_|B
+//	E|___|C .DP
+//	   D
 #define SEV_SEG_MANUAL_0	0b01111110
 #define SEV_SEG_MANUAL_1	0b00110000
 #define SEV_SEG_MANUAL_6	0b01011111

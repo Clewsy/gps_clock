@@ -5,7 +5,8 @@ ISR(BUTTON_PCI_VECTOR)
 {
 	_delay_ms(BUTTON_DEBOUNCE_DURATION);	//wait for DEBOUNCE_DURATION milliseconds to mitigate effect of switch bounce.
 
-	if(BUTTON_PINS & (1 << BUTTON_MODE))
+	//If statement captures press of the "Mode" button.  Cycles through the various display modes.
+	if(!(BUTTON_PINS & (1 << BUTTON_MODE)))
 	{
 		sev_seg_all_clear();		//Clear all digits to avoid artifacts between display modes.
 		mode++;				//Increment the mode.
@@ -18,6 +19,12 @@ ISR(BUTTON_PCI_VECTOR)
 			rtc_get_time(time);		//Update the current time from the rtc.
 			display_time(time, mode);	//Display the current time.
 		}
+	}
+
+	//If statement captures press of the "Sync" button.  Initiates at attempt at syncing RTC clock to GPS data.
+	if(!(BUTTON_PINS & (1 << BUTTON_SYNC)))
+	{
+		attempt_sync();		//Attempt to sync the RTC time with GPS data.
 	}
 }
 
@@ -40,7 +47,7 @@ void hardware_init(void)
 						//PCIE0: Pin-Change Interrupt Enable 0 (Enables PCINT[7-0] i.e. PB[7-0])
 						//PCIE1: Pin-Change Interrupt Enable 1 (Enables PCINT[14-8] i.e. PC[6-0])
 						//PCIE2: Pin-Change Interrupt Enable 2 (Enables PCINT[23-16] i.e. PD[7-0])
-	BUTTON_PCMSK |= ((1 << BUTTON_MODE) | (1 << BUTTON_SELECT));
+	BUTTON_PCMSK |= ((1 << BUTTON_MODE) | (1 << BUTTON_SYNC));
 						//Enable Pin-Change Interrupt on PCINT[x] for PCINT pins to which the 5 buttons are connected.
 						//PCMSK0: Pin-Change Mask Register 0 (For PCINT[7-0] i.e. PB[7-0])
 						//PCMSK1: Pin-Change Mask Register 1 (For PCINT[14-8] i.e. PC[6-0])
@@ -48,7 +55,7 @@ void hardware_init(void)
 						//PCINT[0-7]: Pin-Change Interrupt [0-7]. Note PCINT[7-0]: PB[7-0]
 						//PCINT[14-8]: Pin-Change Interrupt [14-8]. Note PCINT[7-0]: PC[6-0]
 						//PCINT[23-16]: Pin-Change Interrupt [23-16]. Note PCINT[7-0]: PD[7-0]
-	BUTTON_PORT |= ((1 << BUTTON_MODE) | (1 << BUTTON_SELECT));
+	BUTTON_PORT |= ((1 << BUTTON_MODE) | (1 << BUTTON_SYNC));
 						//Enable pull-up resistors for the buttons.
 
 	sei();			//Global enable interrups (requires avr/interrupt.h)
@@ -138,10 +145,10 @@ void display_time(uint8_t *time, uint8_t mode)
 		//Mode 3 displays Epoch time (unix time) which is the number of seconds since midnight, January first, 1970 (i.e. 19700101000000).
 		case (MODE_3) :		//	|E P O C H   S S S S S S S S S S |
 
-			sev_seg_write_byte(SEV_SEG_DECODE_MODE_A, 0b11100000);		//Set the first 5 digits (0-4) to manual decode to display text.
-			for (uint8_t i = 0; i < 5; i++)					//For loop runs through the first 5 digits (0-4).
+			sev_seg_write_byte(SEV_SEG_DECODE_MODE_A, 0b11000000);		//Set the first 5 digits (0-4) to manual decode to display text.
+			for (uint8_t i = 0; i < 6; i++)					//For loop runs through the first 6 digits (0-5).
 			{
-				sev_seg_write_byte(SEV_SEG_DIGIT_0 + i, epoch_text[i]);	//Write the pseudo-text "EPOCH"
+				sev_seg_write_byte(SEV_SEG_DIGIT_0 + i, epoch_text[i]);	//Write the pseudo-text "EPOCH-"
 			}
 
 			//Time to calculate the epoch time.  This will work for any date time from Jan 1st 2000 until Dec 31st 2100.
@@ -243,6 +250,21 @@ uint8_t sync_time (uint8_t *time)
 	return(FALSE);		//Should not reach this.
 }
 
+//Attempt to sync thr RTC time to GPS data.  Display status on-screen using pseudo-text.
+void attempt_sync(void)
+{
+	//Attempt to sync rtc time with gps time.
+	sev_seg_display_word(syncing, 2000);		//Display "SynCIng" for 3 seconds.
+	if (!sync_time(time))				//If the sync is unsuccessful...
+	{
+		sev_seg_display_word(no_sync, 1000);	//Display "nO SynC" for 3 seconds.
+	}
+	else						//If the sync was successful...
+	{
+		sev_seg_display_word(success, 1000);	//Display "SUCCESS" for 3 seconds.
+	}
+}
+
 //Display "pseudo-text" on the seven-segment display.
 void sev_seg_display_word(uint8_t *word, uint16_t duration_ms)
 {
@@ -311,24 +333,19 @@ void sev_seg_startup_ani(void)
 	refresh_display();		//Refresh the display in accordance with the buffer (i.e. clear all digits);
 }
 
+
 int main(void)
 {
 	hardware_init();	//initialise the hardware peripherals
 
-	usart_print_string("\r\nclock(get_time);\r\n");
+	//usart_print_string("\r\nclock(get_time);\r\n");	//Used for debugging.
 
-	sev_seg_startup_ani();			//Run through the start-up animation.
-	sev_seg_display_word(syncing, 2000);	//Display "SynCIng" for 2 seconds before checking for gps sync.
+	sev_seg_startup_ani();		//Run through the start-up animation.
 
-	//Attempt to sync rtc time with gps time.
-	if (!sync_time(time))	//If the sync is unsuccessful...
-	{
-		sev_seg_display_word(no_sync, 3000);	//Display "nO SynC" for 3 seconds.
-	}
+	attempt_sync();			//Attempt to sync the RTC time with GPS data.
 
 	while (1)
 	{
-
 
 		rtc_get_time(time);		//Update the current time from the rtc.
 		display_time(time, mode);	//Display the current time.

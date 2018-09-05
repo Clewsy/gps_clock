@@ -27,8 +27,8 @@ void sev_seg_write_byte(uint8_t address, uint8_t data)
 //Initialise both the display drivers.
 void sev_seg_init(void)
 {
-	SPI_DDR |= (1 << SEV_SEG_LOAD); 		//Set LOAD pin as an output
-	PORTB |= (1 << SEV_SEG_LOAD);			//Set LOAD pin to high at start (data latching occurs on LOAD rising edge).
+	SPI_DDR |= (1 << SEV_SEG_LOAD); 			//Set LOAD pin as an output
+	SEV_SEG_PORT |= (1 << SEV_SEG_LOAD);			//Set LOAD pin to high at start (data latching occurs on LOAD rising edge).
 
 	//First setup max7219 driver A (digits 0-7)
 	sev_seg_write_byte(SEV_SEG_SCAN_LIMIT_A, 7);		//Set number of digits in the display to 8 (Data=number of digits - 1)

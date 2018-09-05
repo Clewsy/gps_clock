@@ -17,7 +17,7 @@
 #define BUTTON_PCIE			PCIE1		//PCIE1: Pin Change Interrupt Enable 1 - For enabling interrupts on IO level change.
 #define BUTTON_PCMSK			PCMSK1		//PCMSK1: Pin Change Mask Register 1 - For masking which IO lines to trigger interrupt.
 #define BUTTON_MODE			PC0		//PC0: PCINT8
-#define BUTTON_SELECT			PC1		//PC1: PCINT9
+#define BUTTON_SYNC			PC1		//PC1: PCINT9
 #define BUTTON_PCI_VECTOR		PCINT1_vect	//PCINT1: Pin-Change Interrupt 1 - Define the interrupt sub-routine vector function name.
 #define BUTTON_DEBOUNCE_DURATION	10		//Define the duration in ms to wait to avoide button "bounce".
 
@@ -64,7 +64,7 @@
 
 //The following 2-dimensional array serves as a look-up table to determine the number of days elapsed within the current 4-year block.
 //This is required so that leap-days are included when calculating epoch time.
-const static uint16_t days_table[4][12] =
+static uint16_t days_table[4][12] =
 {	//Jan  Feb  Mar  Apr  May  Jun  Jul  Aug  Sep  Oct  Nov  Dec
 	{   0,  31,  60,  91, 121, 152, 182, 213, 244, 274, 305, 335},	//First year (leap year).
 	{ 366, 397, 425, 456, 486, 517, 547, 578, 609, 639, 670, 700},	//Second year.
@@ -111,7 +111,9 @@ static uint8_t syncing[16] = {SEV_SEG_MANUAL_S, SEV_SEG_MANUAL_Y, SEV_SEG_MANUAL
 	0, 0, 0, 0, 0, 0, 0, 0, 0};	//"SynCIng"
 static uint8_t no_sync[16] = {SEV_SEG_MANUAL_N, SEV_SEG_MANUAL_O, 0, SEV_SEG_MANUAL_S, SEV_SEG_MANUAL_Y, SEV_SEG_MANUAL_N, SEV_SEG_MANUAL_C,
 	0, 0, 0, 0, 0, 0, 0, 0, 0};	//"nO SynC"
-static uint8_t epoch_text[5] = {SEV_SEG_MANUAL_E, SEV_SEG_MANUAL_P, SEV_SEG_MANUAL_O, SEV_SEG_MANUAL_C, SEV_SEG_MANUAL_H};
+static uint8_t success[16] = {SEV_SEG_MANUAL_S, SEV_SEG_MANUAL_U, SEV_SEG_MANUAL_C, SEV_SEG_MANUAL_C, SEV_SEG_MANUAL_E, SEV_SEG_MANUAL_S, SEV_SEG_MANUAL_S,
+	0, 0, 0, 0, 0, 0, 0, 0, 0};	//"SynCIng"
+static uint8_t epoch_text[6] = {SEV_SEG_MANUAL_E, SEV_SEG_MANUAL_P, SEV_SEG_MANUAL_O, SEV_SEG_MANUAL_C, SEV_SEG_MANUAL_H, SEV_SEG_MANUAL_DASH};
 //static uint8_t adjust[16] = {SEV_SEG_MANUAL_A, SEV_SEG_MANUAL_D, SEV_SEG_MANUAL_J, SEV_SEG_MANUAL_U, SEV_SEG_MANUAL_S, SEV_SEG_MANUAL_T,
 //	0, 0, 0, 0, 0, 0, 0, 0, 0, 0};	//"AdJUSt"
 //static uint8_t iso[16] = {0, 0, 0, 0, SEV_SEG_MANUAL_I, SEV_SEG_MANUAL_S, SEV_SEG_MANUAL_O, SEV_SEG_MANUAL_DASH,
@@ -126,5 +128,6 @@ void display_time(uint8_t *time, uint8_t mode);	//Show the current time in accor
 void clear_disp_buffer(void);			//Write data to the display buffer that corresponds to a blank digit (all segments off) for all 16.
 void refresh_display(void);			//Take the contents of the display buffer array and send it to the seven segment display drivers.
 uint8_t sync_time (uint8_t *time);		//Update the time array by parsing the date and time from the GPS module.  Returns FALSE if data is invalid.
+void attempt_sync(void);			//Attempt to sync the RTC time with GPS data.  Display status with pseudo-text.
 void sev_seg_display_word(uint8_t *word, uint16_t duration_ms);		//Use the seven-segment digits to display pseudo "text".
 void sev_seg_startup_ani(void);			////Simple startup animation scans the decimal point (DP) right to left then back a few times.

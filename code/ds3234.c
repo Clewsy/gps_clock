@@ -34,17 +34,17 @@ void rtc_write_byte(uint8_t address, uint8_t data)
 //Refer to the address map in the ds3234 datasheet.
 void rtc_get_time(uint8_t *time)
 {
-	time[SEC_ONES] = ((rtc_read_byte(RTC_SECR_RA)) & 0b1111);	//B7=0, B6-B4=(10 seconds), B3-B0=(seconds)
+	time[SEC_ONES] = (rtc_read_byte(RTC_SECR_RA) & 0b1111);		//B7=0, B6-B4=(10 seconds), B3-B0=(seconds)
 	time[SEC_TENS] = (rtc_read_byte(RTC_SECR_RA) >> 4);
-	time[MIN_ONES] = ((rtc_read_byte(RTC_MINR_RA)) & 0b1111);	//B7=0, B6-B4=(10 minutes), B3-B0=(minutes)
+	time[MIN_ONES] = (rtc_read_byte(RTC_MINR_RA) & 0b1111);		//B7=0, B6-B4=(10 minutes), B3-B0=(minutes)
 	time[MIN_TENS] = (rtc_read_byte(RTC_MINR_RA) >> 4);
-	time[HOU_ONES] = ((rtc_read_byte(RTC_HRR_RA)) & 0b1111);	//B7-B6=0, B5=(20 hours), B4=(10 hours), B3-B0=(hours)
+	time[HOU_ONES] = (rtc_read_byte(RTC_HRR_RA) & 0b1111);		//B7-B6=0, B5=(20 hours), B4=(10 hours), B3-B0=(hours)
 	time[HOU_TENS] = (rtc_read_byte(RTC_HRR_RA) >> 4);
-	time[DAT_ONES] = ((rtc_read_byte(RTC_DATER_RA)) & 0b1111);	//B7-B6=0, B5-B4=(10 date), B3-B0=(date)
+	time[DAT_ONES] = (rtc_read_byte(RTC_DATER_RA) & 0b1111);	//B7-B6=0, B5-B4=(10 date), B3-B0=(date)
 	time[DAT_TENS] = (rtc_read_byte(RTC_DATER_RA) >> 4);
-	time[MON_ONES] = ((rtc_read_byte(RTC_MCR_RA)) & 0b1111);	//B7-B5=0, B4=(10 month), B3-B0=(month)
-	time[MON_TENS] = ((rtc_read_byte(RTC_MCR_RA) >> 4) & 0b111);
-	time[YEA_ONES] = ((rtc_read_byte(RTC_YRR_RA)) & 0b1111);	//B7-B4=(10 year), B3-B0=(year)
+	time[MON_ONES] = (rtc_read_byte(RTC_MCR_RA) & 0b1111);		//B7-B5=0, B4=(10 month), B3-B0=(month)
+	time[MON_TENS] = ((rtc_read_byte(RTC_MCR_RA) >> 4) & 0b111);	//	(Note need to ignore century bit).
+	time[YEA_ONES] = (rtc_read_byte(RTC_YRR_RA) & 0b1111);		//B7-B4=(10 year), B3-B0=(year)
 	time[YEA_TENS] = (rtc_read_byte(RTC_YRR_RA) >> 4);
 	if(rtc_read_byte(RTC_MCR_RA) & 0b10000000)			//B7= Century flag. Note, century is either 19 or 20, so if bit is clear, year is 19XX.
 	{
