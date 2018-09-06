@@ -10,6 +10,7 @@
 #include <avr/io.h>		//From standard AVR libraries - used for calling standard registers etc.
 #include <util/delay.h>		//From the standard AVR libraries - used to call delay_ms() and delay_us() functions.
 #include <spi.h>		//Used for serial communications via SPI
+#include <avr/interrupt.h>	//Required to use sei(); and cli(); so interrupts can be controlled to avoid corrupting spi transmissions.
 
 //Definitions for use by SPI.c functions
 #define SEV_SEG_LOAD	PB1	//Although MAX7219 is not true SPI, LOAD pin triggers latching (on rising edge) and acts similarly to SS/CS.
@@ -81,6 +82,7 @@
 #define SEV_SEG_MANUAL_H	0b00110111
 #define SEV_SEG_MANUAL_I	0b00110000
 #define SEV_SEG_MANUAL_J	0b00111100
+#define SEV_SEG_MANUAL_L	0b00001110
 #define SEV_SEG_MANUAL_N	0b01110110
 #define SEV_SEG_MANUAL_O	0b01111110
 #define SEV_SEG_MANUAL_P	0b01100111

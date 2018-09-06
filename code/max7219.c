@@ -4,6 +4,8 @@
 //Writes a byte to an address in both of the MAX7219s.  Note, one driver will receive data, the other will receive no-op command.
 void sev_seg_write_byte(uint8_t address, uint8_t data)
 {
+	cli();		//Temporarily disable interrupts so that spi communications are not corrupted.
+
 	if(address & 0x80)		//Check driver flag.  If set, address is for driver B (DIG_8 to DIG_15).
 	{
 		SEV_SEG_LOAD_LOW;		//Drop the level of the LOAD pin
@@ -22,6 +24,8 @@ void sev_seg_write_byte(uint8_t address, uint8_t data)
 		spi_trade_byte(data);		//Send the data to be stored
 		SEV_SEG_LOAD_HIGH;		//Raise the level of the LOAD pin - this triggers latching of the sent bytes (last 16 bits of data are latched).
 	}
+
+	sei();		//Re-enable interrupts.
 }
 
 //Initialise both the display drivers.
@@ -49,6 +53,8 @@ void sev_seg_init(void)
 //Note the digits bust be in CODE-B mode.
 void sev_seg_all_clear(void)
 {
+	cli();		//Temporarily disable interrupts so that spi communications are not corrupted.
+
 	for (uint8_t i = 8; i > 0; i--)		//Counts down through the digits from digit 7 (8) to digit 0 (1).
 	{
 		SEV_SEG_LOAD_LOW;				//Drop the level of the LOAD pin.
@@ -58,17 +64,23 @@ void sev_seg_all_clear(void)
 		spi_trade_byte(SEV_SEG_CODEB_BLANK);		//Push in data to clear digit at i (will be in driver A at latch).
 		SEV_SEG_LOAD_HIGH;				//Raise the level of the LOAD pin - triggers latching of the sent bytes (last 16 bits latched).
 	}
+
+	sei();		//Re-enable interrupts.
 }
 
 //Turns display on or off without changing any other registers.  This is useful to prevent display artifacts when switching between manual and code-b modes.
 void sev_seg_power(uint8_t on_or_off)
 {
+	cli();		//Temporarily disable interrupts so that spi communications are not corrupted.
+
 	SEV_SEG_LOAD_LOW;				//Drop the level of the LOAD pin.
 	spi_trade_byte(SEV_SEG_SHUTDOWN_B);		//Push in address for shutdown mode (will be in driver B at latch).
 	spi_trade_byte(on_or_off);			//Push in data to set shutdown mode : 1=on, 2=off (will be in driver B at latch).
 	spi_trade_byte(SEV_SEG_SHUTDOWN_A);		//Push in address for shutdown mode (will be in driver A at latch).
 	spi_trade_byte(on_or_off);			//Push in data to set shutdown mode : 1=on, 2=off (will be in driver A at latch).
 	SEV_SEG_LOAD_HIGH;				//Raise the level of the LOAD pin - triggers latching of the sent bytes (last 16 bits latched).
+
+	sei();		//Re-enable interrupts.
 }
 
 //Sets all digits on both drivers to decode mode "manual" or "code B".
@@ -76,12 +88,16 @@ void sev_seg_power(uint8_t on_or_off)
 //Therefore, when manual is used in a function, the function should reset to code B prior to exit.
 void sev_seg_decode_mode(uint8_t decode_mode)
 {
+	cli();		//Temporarily disable interrupts so that spi communications are not corrupted.
+
 	SEV_SEG_LOAD_LOW;				//Drop the level of the LOAD pin.
 	spi_trade_byte(SEV_SEG_DECODE_MODE_B);		//Push in address for decode mode (will be in driver B at latch).
 	spi_trade_byte(decode_mode);			//Push in data to set decode mode : 0x00=all manual, OxFF=all Code B (will be in driver B at latch).
 	spi_trade_byte(SEV_SEG_DECODE_MODE_A);		//Push in address for decode mode (will be in driver A at latch).
 	spi_trade_byte(decode_mode);			//Push in data to set decode mode : 0x00=all manual, OxFF=all Code B (will be in driver A at latch).
 	SEV_SEG_LOAD_HIGH;				//Raise the level of the LOAD pin - triggers latching of the sent bytes (last 16 bits latched).
+
+	sei();		//Re-enable interrupts.
 }
 
 //Takse any 64-bit integer and displays the decimal value using the 16 7-seg digits.  Least-significant digit will be displayed to the far right (digit 15).

@@ -11,9 +11,9 @@ ISR(BUTTON_PCI_VECTOR)
 		sev_seg_decode_mode(DECODE_CODE_B);	//Whenever the mode is changed, return all digits to default Code B decode mode.
 		sev_seg_all_clear();			//Clear all digits to avoid artifacts between display modes.
 		mode++;					//Increment the mode.
-		if(mode > MODE_4)			//If largest mode value reached.
+		if(mode > MODE_4_OFFSET)			//If largest mode value reached.
 		{
-			mode = MODE_1A;			//Cycle back to first mode.
+			mode = MODE_1A_ISO;			//Cycle back to first mode.
 		}
 		while(BUTTON_PINS & (1 << BUTTON_MODE))	//Keep refreshing the display until the button is released.
 		{
@@ -25,7 +25,7 @@ ISR(BUTTON_PCI_VECTOR)
 	//If statement captures press of the "Sync" button.  Initiates at attempt at syncing RTC clock to GPS data.
 	if(!(BUTTON_PINS & (1 << BUTTON_SYNC)))
 	{
-		if (mode == MODE_4)		//Special case: if mode 4 is running, the Sync button cycles the UTC offset.
+		if (mode == MODE_4_OFFSET)		//Special case: if mode 4 is running, the Sync button cycles the UTC offset.
 		{
 			cycle_offset();		//Cycle the UTC offset value (-11.5hrs to +12.0hrs).
 		}
@@ -52,21 +52,32 @@ void hardware_init(void)
 
 	PCICR |= (1 << BUTTON_PCIE);		//Enable Pin-Change Interrupt for pin-change int pins PCINT[8-14].  This includes both buttons.
 						//PCICR: Pin-Change Interrupt Control Register
-						//PCIE0: Pin-Change Interrupt Enable 0 (Enables PCINT[7-0] i.e. PB[7-0])
-						//PCIE1: Pin-Change Interrupt Enable 1 (Enables PCINT[14-8] i.e. PC[6-0])
-						//PCIE2: Pin-Change Interrupt Enable 2 (Enables PCINT[23-16] i.e. PD[7-0])
 	BUTTON_PCMSK |= ((1 << BUTTON_MODE) | (1 << BUTTON_SYNC));
 						//Enable Pin-Change Interrupt on PCINT[x] for PCINT pins to which the 5 buttons are connected.
 						//PCMSK0: Pin-Change Mask Register 0 (For PCINT[7-0] i.e. PB[7-0])
-						//PCMSK1: Pin-Change Mask Register 1 (For PCINT[14-8] i.e. PC[6-0])
-						//PCMSK2: Pin-Change Mask Register 2 (For PCINT[23-16] i.e. PD[7-0])
-						//PCINT[0-7]: Pin-Change Interrupt [0-7]. Note PCINT[7-0]: PB[7-0]
-						//PCINT[14-8]: Pin-Change Interrupt [14-8]. Note PCINT[7-0]: PC[6-0]
-						//PCINT[23-16]: Pin-Change Interrupt [23-16]. Note PCINT[7-0]: PD[7-0]
 	BUTTON_PORT |= ((1 << BUTTON_MODE) | (1 << BUTTON_SYNC));
 						//Enable pull-up resistors for the buttons.
 
 	sei();			//Global enable interrups (requires avr/interrupt.h)
+}
+
+//This function validates the GMT time offset value saved in eeprom.
+//The offset is stored in eeprom so it is retained when power is lost (also when AVR is reprogrammed provided the save_eeprom fuse is set).
+//This if statement will ensure it is a valid value (multiple of 5 from -120 to 120).
+//If the value is invalid, set it to 0.  On a new chip eeprom memory would be defaulted to 0xFF.
+//Have to typecast byte as a signed int as only unsigned integers are stored in eeprom.
+void validate_eeprom_offset(void)
+{
+
+	if
+	(
+		((int8_t)eeprom_read_byte(OFFSET_EEPROM_ADDRESS) % 5) ||		//Returns true if there is a remainder after dividing by 5, OR
+		((int8_t)eeprom_read_byte(OFFSET_EEPROM_ADDRESS) > 120) ||		//Returns true if the value is larger than 120, OR
+		((int8_t)eeprom_read_byte(OFFSET_EEPROM_ADDRESS) < -120)		//Returns true if the value is less than -120.
+	)
+	{
+		eeprom_update_byte((uint8_t *) OFFSET_EEPROM_ADDRESS, 0);	//set the offset value stored in eeprom to 0.
+	}
 }
 
 //This function will call other functions depending on the currently selected display mode.
@@ -75,20 +86,20 @@ void poll(void)
 	switch (mode)	//Thhis switch is used to setup the display depending on which mode is selected.
 	{
 		//Modes 1A, 1B, 2A and 2B are all variations on the ISO-8601 date/time display.
-		case (MODE_1A) :	//	|Y Y Y Y M M D D     H H M M S S |
-		case (MODE_1B) :	//	|Y Y Y Y.M M.D D.    H H.M M.S S.|
-		case (MODE_2A) :	//	|  Y Y Y Y M M D D H H M M S S   |
-		case (MODE_2B) :	//	|  Y Y Y Y.M M.D D.H H.M M.S S.  |
+		case (MODE_1A_ISO) :	//	|Y Y Y Y M M D D     H H M M S S |
+		case (MODE_1B_ISO) :	//	|Y Y Y Y.M M.D D.    H H.M M.S S.|
+		case (MODE_2A_ISO) :	//	|  Y Y Y Y M M D D H H M M S S   |
+		case (MODE_2B_ISO) :	//	|  Y Y Y Y.M M.D D.H H.M M.S S.  |
 			display_iso_time();
 		break;
 
 		//Mode 3 displays Epoch time (unix time) which is the number of seconds since midnight, January first, 1970 (i.e. 19700101000000).
-		case (MODE_3) :		//	|E P O C H   S S S S S S S S S S |
+		case (MODE_3_EPOCH) :		//	|E P O C H   S S S S S S S S S S |
 			display_epoch_time();
 		break;
 
 		//Mode 4 allows setting the UTC time offset (-11.5hrs to +12.0hrs).
-		case (MODE_4) :		//	|A d J U S t             ± # #.# |
+		case (MODE_4_OFFSET) :		//	|A d J U S t             ± # #.# |
 			get_offset();
 		break;
 	}
@@ -100,18 +111,20 @@ void display_iso_time(void)
 	uint8_t date_offset = 0;	//This offset will determine which digit the date will start at.
 	uint8_t time_offset = 0;	//This offset will determine how many digits after the date that the time will start.
 	uint8_t delimiters = 0;		//This flag will be used to activate the decimal point if the current mode requires it.
+	uint8_t current_mode = mode;	//This variable will be used to check for mode change that will exit the while loop.
+	uint8_t i;	//General use integer for running for loops.
 
 	//This switch used to set the positions of the date and time within the 16-digit display.
 	switch (mode)
 	{
-		case (MODE_1A) :
-		case (MODE_1B) :
+		case (MODE_1A_ISO) :
+		case (MODE_1B_ISO) :
 			date_offset = 0;	//Start date display at the first digit (digit 0).
 			time_offset = 2;	//Leave two digits blank after the date and before the time.
 		break;
 
-		case (MODE_2A) :
-		case (MODE_2B) :
+		case (MODE_2A_ISO) :
+		case (MODE_2B_ISO) :
 			date_offset = 1;	//Start date display at the second digit (digit 1).
 			time_offset = 0;	//Start time display immediately after date display.
 		break;
@@ -120,47 +133,52 @@ void display_iso_time(void)
 	//This switch used to determine whether or not delimiters are to be used (decimal point between time/date components).
 	switch (mode)
 	{
-		case (MODE_1A) :
-		case (MODE_2A) :
+		case (MODE_1A_ISO) :
+		case (MODE_2A_ISO) :
 			delimiters = 0;		//Do NOT show decimal points between years, months, DATs, hours, mionutes, seconds.
 		break;
 
-		case (MODE_1B) :
-		case (MODE_2B) :
+		case (MODE_1B_ISO) :
+		case (MODE_2B_ISO) :
 			delimiters = SEV_SEG_DP;//DO show decimal points between years, months, DATs, hours, mionutes, seconds.
 		break;
 	}
 
-	uint8_t i;	//General use integer for running for loops.
-
-	//This loop will apply the decimal point flag to the last digit of each date/time component IF "delimiters" is set my the operating mode.
-	for (i = 3; i < 14; i += 2)
-	{
-		time[i] |= delimiters;	//"delimiters" is either 0 (no effect) or SEV_SEG_DP which will set the decimal point flag for the sev-seg drivers.
-	}
-
-	//This loop will clear every digit in the display buffer in case the mode has changed.
+	//This loop will clear every digit in the display buffer to prevent artifacts from previous modes.
 	for (i = 0; i < 16; i++)
 	{
 		disp_buffer[i] = SEV_SEG_CODEB_BLANK;
 	}
 
-	//This loop will set the display buffer digits for the date components (CEN, YEA, MON, DAT).
-	for (i = 0; i < 8; i++)
+	//All static date required to display in accordance with the selected mode is set,
+	//so enter a loop that will continuously update the dynamic data and refresh the display.
+	while (mode == current_mode)	//This loop will exit when the mode changes.
 	{
-		disp_buffer[i + date_offset] = time[i];			//"date_offset" determined by current mode.
-	}
+		rtc_get_time(time);		//Update the current time from the rtc.
 
-	//This loop will set the display buffer digits for the time components (HOU, MIN, SEC).
-	for (i = 8; i < 14; i++)
-	{
-		disp_buffer[i + date_offset + time_offset] = time[i];	//"time_offset" determined by current mode.
-	}
+		//This loop will apply the decimal point flag to the last digit of each date/time component IF "delimiters" is set my the operating mode.
+		for (i = 3; i < 14; i += 2)
+		{
+			time[i] |= delimiters;	//"delimiters" is either 0 (no effect) or SEV_SEG_DP which will set the decimal point flag for the sev-seg drivers.
+		}
 
-	refresh_display();	//send the display buffer data to the sev-seg display drivers.
+		//This loop will set the display buffer digits for the date components (CEN, YEA, MON, DAT).
+		for (i = 0; i < 8; i++)
+		{
+			disp_buffer[i + date_offset] = time[i];			//"date_offset" determined by current mode.
+		}
+
+		//This loop will set the display buffer digits for the time components (HOU, MIN, SEC).
+		for (i = 8; i < 14; i++)
+		{
+			disp_buffer[i + date_offset + time_offset] = time[i];	//"time_offset" determined by current mode.
+		}
+
+		refresh_display();	//send the display buffer data to the sev-seg display drivers.
+	}
 }
 
-//This function will write data to the display buffer that corresponds to a blank digit (all segments off) for all 16.
+//This function will write data to the display buffer that corresponds to a blank digit (all segments off) for all 16 (Code B mode only).
 void clear_disp_buffer(void)
 {
 	for (uint8_t i = 0; i < 16; i++)		//Repeat for all 16 digits (0 to 15).
@@ -184,37 +202,51 @@ void display_epoch_time(void)
 	//Initialisation of the epoch variable (number of seconds elapsed since 1970.01.01.00.00.00.
 	uint64_t epoch = 0;
 
-	sev_seg_write_byte(SEV_SEG_DECODE_MODE_A, 0b11000000);		//Set the first 5 digits (0-4) to manual decode to display text.
-	for (uint8_t i = 0; i < 6; i++)					//For loop runs through the first 6 digits (0-5).
+	//Enter a loop that will continuously update the dynamic data and refresh the display.
+	while (mode == MODE_3_EPOCH)	//This loop will exit when the mode changes.
 	{
-		sev_seg_write_byte(SEV_SEG_DIGIT_0 + i, epoch_text[i]);	//Write the pseudo-text "EPOCH-"
+		sev_seg_write_byte(SEV_SEG_DECODE_MODE_A, 0b11000000);		//Set the first 5 digits (0-4) to manual decode to display text.
+		for (uint8_t i = 0; i < 6; i++)					//For loop runs through the first 6 digits (0-5).
+		{
+			sev_seg_write_byte(SEV_SEG_DIGIT_0 + i, epoch_text[i]);	//Write the pseudo-text "EPOCH-"
+		}
+
+		rtc_get_time(time);		//Update the current time from the rtc.
+
+		//Time to calculate the epoch time.  This will work for any date time from Jan 1st 2000 until Dec 31st 2100.
+		epoch =  EPOCH_SECONDS_TO_2000;						//Seconds elapsed from 19700101000000 to 20000101000000.
+		epoch += (EPOCH_YEAR/4) * DAYS_IN_4_YEARS * SECONDS_IN_A_DAY;		//Seconds elapsed in full 4-year blocks since 2000.
+		epoch += days_table[EPOCH_YEAR % 4][EPOCH_MONTH - 1] * SECONDS_IN_A_DAY;//Seconds elapsed in current 4-year block to start of month.
+		epoch += (EPOCH_DAY -1) * SECONDS_IN_A_DAY;				//Seconds elapsed since start of month to start of day.
+		epoch += EPOCH_HOUR * SECONDS_IN_AN_HOUR;				//Seconds elapsed since start of day to start of hour.
+		epoch += EPOCH_MINUTE * SECONDS_IN_A_MINUTE;				//Seconds elapsed since start of hour to to start of minute.
+		epoch += EPOCH_SECOND;							//Seconds elapsed since start of minute.
+
+		sev_seg_display_int(epoch);	//We have the epoch value so display it (next to "EPOCH-" text).
 	}
-
-	//Time to calculate the epoch time.  This will work for any date time from Jan 1st 2000 until Dec 31st 2100.
-	epoch =  EPOCH_SECONDS_TO_2000;						//Seconds elapsed from 19700101000000 to 20000101000000.
-	epoch += (EPOCH_YEAR/4) * DAYS_IN_4_YEARS * SECONDS_IN_A_DAY;		//Seconds elapsed in full 4-year blocks since 2000.
-	epoch += days_table[EPOCH_YEAR % 4][EPOCH_MONTH - 1] * SECONDS_IN_A_DAY;//Seconds elapsed in current 4-year block to start of month.
-	epoch += (EPOCH_DAY -1) * SECONDS_IN_A_DAY;				//Seconds elapsed since start of month to start of day.
-	epoch += EPOCH_HOUR * SECONDS_IN_AN_HOUR;				//Seconds elapsed since start of day to start of hour.
-	epoch += EPOCH_MINUTE * SECONDS_IN_A_MINUTE;				//Seconds elapsed since start of hour to to start of minute.
-	epoch += EPOCH_SECOND;							//Seconds elapsed since start of minute.
-
-	sev_seg_display_int(epoch);	//We have the epoch value so display it (next to "EPOCH-" text).
 }
 
 //Allow the UTC offset to be adjusted by pressing the "Sync" button.  Valid UTC offsets are in half-hour increments from -11.5 to 12.0.
-//(Note, to avoid using floats, the actual offset value is an integer from -115 to 120)
+//(Note, to avoid using floats, the actual offset value is an integer from -120 to 120)
 void get_offset(void)
 {
 	sev_seg_all_clear();						//Clear all digits to prevent artifacts from previous mode.
 	sev_seg_write_byte(SEV_SEG_DECODE_MODE_A, 0x00);		//Set the first 8 digits (0-7) to manual decode to display text.
-	while (mode == MODE_4)						//Run the following loop until the mode is changed.
+
+	//Enter a loop that will continuously refresh the display and allow adjustment of the offset.
+	while (mode == MODE_4_OFFSET)							//Run the following loop until the mode is changed.
 	{
 		for (uint8_t i = 0; i < 8; i++)					//For loop runs through the first 8 digits (0-7).
 		{
-			sev_seg_write_byte(SEV_SEG_DIGIT_0 + i, adjust[i]);	//Write the pseudo-text "AdJUSt  "
+			sev_seg_write_byte(SEV_SEG_DIGIT_0 + i, offset_txt[i]);	//Write the pseudo-text "AdJUSt  "
 		}
 		display_offset();						//Display the current offset value using the last 4 digits (12-15).
+	}
+
+	if (offset != (int8_t) eeprom_read_byte(OFFSET_EEPROM_ADDRESS))		//If the mode has changed and the offset is different to what's in eeprom...
+	{
+		eeprom_update_byte((uint8_t *) OFFSET_EEPROM_ADDRESS, offset);	//Record the new value to eeprom.
+		attempt_sync();							//Attempt a re-sync with the new offset.
 	}
 }
 
@@ -241,7 +273,22 @@ void cycle_offset(void)
 	offset += 5;			//Increment offset by 5.
 	if (offset > 120)		//If maximum valid value (120) is exceeded...
 	{
-		offset = -115;		//Rollover to minimum valid value (-115).
+		offset = -120;		//Rollover to minimum valid value (-120).
+	}
+}
+
+//Attempt to sync thr RTC time to GPS data.  Display status on-screen using pseudo-text.
+void attempt_sync(void)
+{
+	//Attempt to sync rtc time with gps time.
+	sev_seg_display_word(syncing, 2000);		//Display "SynCIng" for 3 seconds.
+	if (!sync_time(time))				//If the sync is unsuccessful...
+	{
+		sev_seg_display_word(no_sync, 1000);	//Display "nO SynC" for 3 seconds.
+	}
+	else						//If the sync was successful...
+	{
+		sev_seg_display_word(success, 1000);	//Display "SUCCESS" for 3 seconds.
 	}
 }
 
@@ -276,8 +323,8 @@ uint8_t sync_time (uint8_t *time)
 			}
 
 			//The next 6 bytes received represent the date but are received in an inconvenient (not ISO-8601) order -> D,D,M,M,Y,Y
-			time[DAT_TENS] = (usart_receive_byte() - '0');	//Date tens
-			time[DAT_ONES] = (usart_receive_byte() - '0');	//Date ones
+			time[DAY_TENS] = (usart_receive_byte() - '0');	//Date tens
+			time[DAY_ONES] = (usart_receive_byte() - '0');	//Date ones
 			time[MON_TENS] = (usart_receive_byte() - '0');	//Month tens
 			time[MON_ONES] = (usart_receive_byte() - '0');	//Month ones
 			time[YEA_TENS] = (usart_receive_byte() - '0');	//Year tens
@@ -302,6 +349,7 @@ uint8_t sync_time (uint8_t *time)
 		}
 		else
 		{
+			apply_offset();		//Since the time appears valid, apply the UTC offset.
 			rtc_set_time(time);	//Valid time from GPS so update the real-time clock module.
 			return(TRUE);		//This will only be reached if the function received valid time data from the GPS module, so return TRUE.
 		}
@@ -310,18 +358,210 @@ uint8_t sync_time (uint8_t *time)
 	return(FALSE);		//Should not reach this.
 }
 
-//Attempt to sync thr RTC time to GPS data.  Display status on-screen using pseudo-text.
-void attempt_sync(void)
+//Offset range is -120 to +120 whereby actual offset in half-hour increments correspond to values of 5 (e.g. -120:-12.0hrs, +65:+6.5hrs)
+void apply_offset(void)
 {
-	//Attempt to sync rtc time with gps time.
-	sev_seg_display_word(syncing, 2000);		//Display "SynCIng" for 3 seconds.
-	if (!sync_time(time))				//If the sync is unsuccessful...
+	if (offset < 0)
 	{
-		sev_seg_display_word(no_sync, 1000);	//Display "nO SynC" for 3 seconds.
+		//If statement returns true if (absolute value of offset)/10 is non-zero.  Only possible for offset values ending in 5.
+		//Therefore ~if(half-hour increment/decrement is required).
+		if (abs(offset) % 10)				//Need to decrement minutes by 30.
+		{
+			time[MIN_TENS] -= 3;			//Decrement minute tens by 3.
+			if (time[MIN_TENS] > 5)			//If minute tens has rolled under zero (unsigned integer means it actually rolls to 255)
+			{
+				time[MIN_TENS] += 6;		//Correct by adding 6...
+				time[HOU_ONES] --;		//And decrementing hour ones.
+			}
+		}
+
+		time[HOU_ONES] -= (abs(offset) / 10) % 10;	//Decrement hour ones by the ones value represented by "offset".
+		if (time[HOU_ONES] > 9)				//If the hour ones has rolled under zero (unsigned integer means it actually rolls to 255)
+		{
+			time[HOU_ONES] += 10;			//Correct by adding 10...
+			time[HOU_TENS] --;			//And decrementing hour tens.
+		}
+
+		time[HOU_TENS] -= abs(offset) / 100;		//Decrement hour tens by the tens value represented by "offset".
+
+		if (HOU > 23)					//Finally, assess the offset corrected hours value.  If it has rolled under zero...
+		{
+			rollunder_hours();			//Correct by running the rollunder hours function (offset indicates local time is previous day).
+		}
 	}
-	else						//If the sync was successful...
+	else if (offset > 0)
 	{
-		sev_seg_display_word(success, 1000);	//Display "SUCCESS" for 3 seconds.
+		//If statement returns true if (absolute value of offset)/10 is non-zero.  Only possible for offset values ending in 5.
+		//Therefore ~if(half-hour increment/decrement is required).
+		if (offset % 10)				//Need to increment minutes by 30.
+		{
+			time[MIN_TENS] += 3;			//Increment minute tens by 3.
+			if (time[MIN_TENS] > 5)			//If minute tens has rolled over max valid value.
+			{
+				time[MIN_TENS] -= 6;		//Correct by minusing 6...
+				time[HOU_ONES] ++;		//And incrementing hour ones.
+			}
+		}
+
+		time[HOU_ONES] += (offset / 10) % 10;		//Increment hour ones by the ones value represented by "offset".
+		if (time[HOU_ONES] > 9)				//If the hour ones has rolled over max valid value.
+		{
+			time[HOU_ONES] -= 10;			//Correct by minusing 10...
+			time[HOU_TENS] ++;			//And incrementing hour tens.
+		}
+
+		time[HOU_TENS] += offset / 100;			//Increment hour tens by the tens value represented by "offset".
+
+		if (HOU > 23)					//Finally, assess the offset corrected hours value.  If it has rolled over max valid value...
+		{
+			rollover_hours();			//Correct by running the rollunder hours function (offset indicates local time is previous day).
+		}
+	}
+}
+
+//This function is called when offset corrected time requires the local day to be the day prior to UTC day.
+//For correct date/time, Need to add 24 hours and minus one day.
+void rollunder_hours(void)
+{
+	uint8_t hours = HOU + 24;		//"hours" is the desired hours (need to add 24 to the decremented total hours).
+	time[HOU_ONES] = hours % 10;		//Set the required value for hour ones.
+	time[HOU_TENS] = hours / 10;		//Set the required value for hour tens.
+	time[DAY_ONES] --;			//Decrement the day ones.
+	if (DAY < 1)				//Asses the offset corrected day.  If it has rolled below minimum valid value of 1...
+	{
+		rollunder_days();		//Correct by running the rollunder days function (offset indicates local time is previous month).
+	}
+}
+
+//This function is called when offset corrected time requires the local day to be the day after the UTC day.
+//For correct date/time, Need to minus 24 hours and add one day.
+void rollover_hours(void)
+{
+	uint8_t hours = HOU - 24;		//"hours" is the desired hours (need to minus 24 from the incremented total hours).
+	time[HOU_ONES] = hours % 10;		//Set the required value for hour ones.
+	time[HOU_TENS] = hours / 10;		//Set the required value for hour tens.
+	time[DAY_ONES] ++;			//Increment the day ones.
+	if (DAY > 27)				//Asses the offset corrected day.  If it is possible that the month has rolled over...
+	{
+		rollover_days();		//Check and correct (if required) by running the rollover days.
+	}
+}
+
+
+//This function is called when offset corrected time requires the local month to be the month prior to UTC month.
+void rollunder_days(void)
+{
+	//Corrected day value depends on the month being rolled down to.
+	switch (MON)
+	{
+		//In cases where the previous month has 31 days.
+		case FEB:
+		case APR:
+		case JUN:
+		case AUG:
+		case SEP:
+		case NOV:
+			time[DAY_TENS] = 3;
+			time[DAY_ONES] = 1;
+		break;
+		//In cases where the previous month has 30 days.
+		case MAY:
+		case JUL:
+		case OCT:
+		case DEC:
+			time[DAY_TENS] = 3;
+			time[DAY_ONES] = 0;
+		break;
+		//In case of March where the previous month has 28 or 29 days.
+		case MAR:
+			time[DAY_TENS] = 2;
+			time[DAY_ONES] = 9;		//Assume leap year.
+			if (YEA % 4)			//If it's not a leap year...
+			{
+				time[DAY_ONES] --;	//Correct for no leap day.
+			}
+		break;
+		//In case of January where the previous month requires a year rollunder.
+		case JAN:
+			time[DAY_TENS] = 3;
+			time[DAY_ONES] = 1;
+			time[YEA_ONES] --;		//Decrement year ones.
+			if (time[YEA_ONES] > 9)		//If the year ones has rolled under zero (unsigned integer actually rolls over to 255)...
+			{
+				time[YEA_ONES] = 9;	//Set the year ones to 9.
+				time[YEA_TENS] --;	//Decrement the year tens.
+			}
+		break;
+	}
+}
+
+//This function is called when offset corrected time may possibly require the local month to be the month after the UTC month.
+void rollover_days(void)
+{
+	//Corrected day value depends on the month being rolled down to.
+	switch (MON)
+	{
+		//In cases where the month has 31 days.
+		case JAN:
+		case MAR:
+		case MAY:
+		case JUL:
+		case AUG:
+		case OCT:
+			if (DAY == 32)
+			{
+				time[DAY_TENS] = 0;
+				time[DAY_ONES] = 1;
+				time[MON_ONES] ++;
+			}
+		break;
+		//In cases where the month has 30 days.
+		case APR:
+		case JUN:
+		case NOV:
+			if (DAY == 31)
+			{
+				time[DAY_TENS] = 0;
+				time[DAY_ONES] = 1;
+				time[MON_ONES] ++;
+			}
+		break;
+		//In case of September with 30 days and the following month requires incrementing month tens (SEP->OCT:09->10)
+		case SEP:
+			if (DAY == 31)
+			{
+				time[DAY_TENS] = 0;
+				time[DAY_ONES] = 1;
+				time[MON_TENS] = 1;
+				time[MON_ONES] = 0;
+			}
+		break;
+		//In case of February where the month has 28 or 29 days.
+		case FEB:
+			if ( (DAY > 28) && (YEA % 4) )	//If days > 28 and it's not a leap year.
+			{
+				time[DAY_TENS] = 0;
+				time[DAY_ONES] = 1;
+				time[MON_ONES] ++;
+			}
+			else if (DAY > 29)			//It must be a leap year.
+			{
+				time[DAY_TENS] = 0;
+				time[DAY_ONES] = 1;
+				time[MON_ONES] ++;
+			}
+		break;
+		//In case of December where the next  month requires a year rollover.
+		case DEC:
+			time[DAY_TENS] = 0;
+			time[DAY_ONES] = 1;
+			time[YEA_ONES] ++;		//Increment year ones.
+			if (time[YEA_ONES] > 9)		//If the year ones has rolled over max valid value...
+			{
+				time[YEA_ONES] = 0;	//Set the year ones to 0.
+				time[YEA_TENS] ++;	//Increment the year tens.
+			}
+		break;
 	}
 }
 
@@ -348,6 +588,7 @@ void sev_seg_display_word(uint8_t *word, uint16_t duration_ms)
 	sev_seg_power(OFF);			//Turn off both display drivers (prevents artifacts when changing back to Code B decode).
 	sev_seg_decode_mode(DECODE_CODE_B);	//Switch back into Code B decode mode for all digits.
 	sev_seg_all_clear();			//Clear all digits (note this function only works in Code B mode).
+	clear_disp_buffer();			//Also clear all digits in the display buffer.
 	sev_seg_power(ON);			//Switch the display back on (will be blank).
 }
 
@@ -359,16 +600,7 @@ void sev_seg_startup_ani(void)
 
 	uint8_t i, j;			//Initialise a couple of integers for loops.
 
-	//Following block prints "ISO-8601" to the seven-segment displays for 2 seconds.
-	uint8_t splash_string[16] = 	{SEV_SEG_CODEB_BLANK, SEV_SEG_CODEB_BLANK, SEV_SEG_CODEB_BLANK, SEV_SEG_CODEB_BLANK,
-		 			1, 5, 0, SEV_SEG_CODEB_DASH, 8, 6, 0, 1,
-					SEV_SEG_CODEB_BLANK, SEV_SEG_CODEB_BLANK, SEV_SEG_CODEB_BLANK, SEV_SEG_CODEB_BLANK};
-	for (i = 0; i < 16; i++)
-	{
-		disp_buffer[i] = splash_string[i];	//Copy the splash_string array to the disp_buffer array.
-	}
-	refresh_display();		//Refresh the display in accordance with the buffer.
-	_delay_ms(2000);		//Wait for milliseconds.
+	sev_seg_display_word(splash, 3000);	//Display the "Splash-Screen" (pseudo text).
 
 	//The following nested loops scans the decimal point (DP) right to left then back a few times.
 	for (j = 0; j < 5; j++)		//Repeat main animation sequence 5 times.
@@ -396,20 +628,19 @@ void sev_seg_startup_ani(void)
 
 int main(void)
 {
-	hardware_init();	//initialise the hardware peripherals
+	hardware_init();						//initialise the hardware peripherals
 
-	//usart_print_string("\r\nclock(get_time);\r\n");	//Used for debugging.
+	validate_eeprom_offset();					//Confirm the UTC time offset value stored in eeprom is valid.
+	offset = (int8_t) eeprom_read_byte(OFFSET_EEPROM_ADDRESS);	//set the "offset" variable to what is stored in eeprom.
 
-	sev_seg_startup_ani();		//Run through the start-up animation.
+	sev_seg_startup_ani();						//Run through the start-up animation.
 
-	attempt_sync();			//Attempt to sync the RTC time with GPS data.
+	attempt_sync();							//Attempt to sync the RTC time with GPS data.
 
-	while (1)
+	while (1)	//Main infinite loop.
 	{
 
-		rtc_get_time(time);		//Update the current time from the rtc.
-		poll();	//Display the current time.
-
+		poll();		//Poll the selected mode and take the appropriate action..
 
 	}
 	return 0;	//Never reached.

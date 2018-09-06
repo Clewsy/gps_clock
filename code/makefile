@@ -131,3 +131,6 @@ squeaky_clean:
 ##########------------------------------------------------------##########
 program: $(TARGET).hex
 	$(AVRDUDE) -c $(PROGRAMMER_TYPE) -p $(MCU) $(PROGRAMMER_ARGS) -U flash:w:$<
+
+avr_terminal:
+	$(AVRDUDE) -c $(PROGRAMMER_TYPE) -p $(MCU) -nt
