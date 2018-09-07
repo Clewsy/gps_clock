@@ -11,9 +11,9 @@ ISR(BUTTON_PCI_VECTOR)
 		sev_seg_decode_mode(DECODE_CODE_B);	//Whenever the mode is changed, return all digits to default Code B decode mode.
 		sev_seg_all_clear();			//Clear all digits to avoid artifacts between display modes.
 		mode++;					//Increment the mode.
-		if(mode > MODE_4_OFFSET)			//If largest mode value reached.
+		if(mode > MODE_5_INTENSITY)		//If largest mode value reached.
 		{
-			mode = MODE_1A_ISO;			//Cycle back to first mode.
+			mode = MODE_1A_ISO;		//Cycle back to first mode.
 		}
 		while(BUTTON_PINS & (1 << BUTTON_MODE))	//Keep refreshing the display until the button is released.
 		{
@@ -25,13 +25,17 @@ ISR(BUTTON_PCI_VECTOR)
 	//If statement captures press of the "Sync" button.  Initiates at attempt at syncing RTC clock to GPS data.
 	if(!(BUTTON_PINS & (1 << BUTTON_SYNC)))
 	{
-		if (mode == MODE_4_OFFSET)		//Special case: if mode 4 is running, the Sync button cycles the UTC offset.
+		if (mode == MODE_4_OFFSET)		//If mode 4 is running, the Sync button cycles the UTC offset.
 		{
-			cycle_offset();		//Cycle the UTC offset value (-11.5hrs to +12.0hrs).
+			cycle_offset();			//Cycle the UTC offset value (-11.5hrs to +12.0hrs).
 		}
-		else				//All other modes, the Sync button attempts to sync the clock.
+		else if (mode == MODE_5_INTENSITY)	//If mode 5 is running, the sync button cycles the intensity value (brightness).
 		{
-			attempt_sync();		//Attempt to sync the RTC time with GPS data.
+			cycle_intensity();		//Cycle the intensity value that corresponds to display brightness.
+		}
+		else					//All other modes, the Sync button attempts to sync the clock.
+		{
+			attempt_sync();			//Attempt to sync the RTC time with GPS data.
 		}
 	}
 }
@@ -101,6 +105,11 @@ void poll(void)
 		//Mode 4 allows setting the UTC time offset (-11.5hrs to +12.0hrs).
 		case (MODE_4_OFFSET) :		//	|A d J U S t             ± # #.# |
 			get_offset();
+		break;
+
+		//Mode 5 allows setting the LED brightness level for all digits (level 0 to 10).
+		case (MODE_5_INTENSITY) :		//	|I n t E n S I t y           # # |
+			get_intensity();
 		break;
 	}
 }
@@ -231,17 +240,15 @@ void display_epoch_time(void)
 void get_offset(void)
 {
 	sev_seg_all_clear();						//Clear all digits to prevent artifacts from previous mode.
-	sev_seg_write_byte(SEV_SEG_DECODE_MODE_A, 0x00);		//Set the first 8 digits (0-7) to manual decode to display text.
 
 	//Enter a loop that will continuously refresh the display and allow adjustment of the offset.
-	while (mode == MODE_4_OFFSET)							//Run the following loop until the mode is changed.
+	while (mode == MODE_4_OFFSET)						//Run the following loop until the mode is changed.
 	{
-		for (uint8_t i = 0; i < 8; i++)					//For loop runs through the first 8 digits (0-7).
-		{
-			sev_seg_write_byte(SEV_SEG_DIGIT_0 + i, offset_txt[i]);	//Write the pseudo-text "AdJUSt  "
-		}
+		sev_seg_set_word(offset_text, sizeof(offset_text));		//Display "OFFSEt" on the left-most digits.
 		display_offset();						//Display the current offset value using the last 4 digits (12-15).
 	}
+
+	sev_seg_decode_mode(DECODE_CODE_B);					//Return all digits to Code B decode mode.
 
 	if (offset != (int8_t) eeprom_read_byte(OFFSET_EEPROM_ADDRESS))		//If the mode has changed and the offset is different to what's in eeprom...
 	{
@@ -281,14 +288,14 @@ void cycle_offset(void)
 void attempt_sync(void)
 {
 	//Attempt to sync rtc time with gps time.
-	sev_seg_display_word(syncing, 2000);		//Display "SynCIng" for 3 seconds.
+	sev_seg_flash_word(syncing, sizeof(syncing), 2000);		//Display "SynCIng" for 3 seconds.
 	if (!sync_time(time))				//If the sync is unsuccessful...
 	{
-		sev_seg_display_word(no_sync, 1000);	//Display "nO SynC" for 3 seconds.
+		sev_seg_flash_word(no_sync, sizeof(no_sync), 1000);	//Display "nO SynC" for 3 seconds.
 	}
 	else						//If the sync was successful...
 	{
-		sev_seg_display_word(success, 1000);	//Display "SUCCESS" for 3 seconds.
+		sev_seg_flash_word(success, sizeof(success), 1000);	//Display "SUCCESS" for 3 seconds.
 	}
 }
 
@@ -339,7 +346,7 @@ uint8_t sync_time (uint8_t *time)
 		}
 	}
 
-	//Error checking.  All digits in the date/time array "time[]" should be 0-9.  If anything else is found, exit the function and return FALSE.
+	//Basic error checking.  All digits in the date/time array "time[]" should be 0-9.  If anything else is found, exit the function and return FALSE.
 	for(i = YEA_TENS; i <= SEC_ONES; i++)		//Loop through all elements of the "time" array (excluding manually set century).
 	{
 		if(time[i] > 9)				//If any element is an integer larger than 9, then the data is no good.
@@ -446,7 +453,6 @@ void rollover_hours(void)
 		rollover_days();		//Check and correct (if required) by running the rollover days.
 	}
 }
-
 
 //This function is called when offset corrected time requires the local month to be the month prior to UTC month.
 void rollunder_days(void)
@@ -565,20 +571,73 @@ void rollover_days(void)
 	}
 }
 
-//Display "pseudo-text" on the seven-segment display.
-void sev_seg_display_word(uint8_t *word, uint16_t duration_ms)
+//Allow the UTC offset to be adjusted by pressing the "Sync" button.  Valid UTC offsets are in half-hour increments from -11.5 to 12.0.
+//(Note, to avoid using floats, the actual offset value is an integer from -120 to 120)
+void get_intensity(void)
 {
-	//Note, display running in "Code B" decode mode when function is entered.  This needs to be changed to manual decode to print text-like characters.
-	sev_seg_all_clear();			//Clear all digits.
-	sev_seg_power(OFF);			//Turn off both display drivers (prevents artifacts when changing to manual decode).
-	sev_seg_decode_mode(DECODE_MANUAL);	//Switch into manual decode mode for all digits.
+	sev_seg_all_clear();							//Clear all digits to prevent artifacts from previous mode.
 
-	for (uint8_t i = 0; i < 16; i++)	//Run a loop to set all 16 digits in the display buffer.
+	//Enter a loop that will continuously refresh the display and allow adjustment of the offset.
+	while (mode == MODE_5_INTENSITY)					//Run the following loop until the mode is changed.
 	{
-		disp_buffer[i] = word[i];	//Copy the word array to the disp_buffer array.
+		sev_seg_set_word(intensity_text, sizeof(intensity_text));	//Display the psuedo-test "IntEnSIty" on the left.
+		sev_seg_display_int(intensity);					//Display the current intensity integer value om the right.
+		//PLACEHOLDER - Call function to set the brightness level.
 	}
-	refresh_display();			//Refresh the display in accordance with the buffer.
-	sev_seg_power(ON);			//Switch the display drivers back on.
+	sev_seg_decode_mode(DECODE_CODE_B);	//Return all digits to Code B decode mode.
+}
+
+//Increment the offset value and rollover when maximum value is exceeded.
+//This function is called when the "Sync" button is pressed only when running Mode 4.
+void cycle_intensity(void)
+{
+	intensity ++;			//Increment intensity.
+	if (intensity > 9)		//If maximum valid value (9) is exceeded...
+	{
+		intensity = 1;		//Rollover to minimum valid value (1).
+	}
+}
+
+
+//This function will be passed a word (encoded as required by the MAX7219 drivers) and the number of characters in that word.
+//Starting from the left most digit (0) all digits required to display the word will be set to manual decode mode.
+//All other digits remain in code B decode mode (assume all digits in code B mode when function is called).
+//Note, if required, code B mode must be restored manually after this function is complete ("sev_seg_decode_mode(DECODE_CODE_B)").
+void sev_seg_set_word(uint8_t *word, uint8_t word_length)
+{
+	uint8_t i = 0;	//Initiate an integer for loops.
+
+	sev_seg_write_byte(SEV_SEG_DECODE_MODE_A, 0xFF << (word_length));	//Set the decode mode bits corresponding to digits 0-7 (driver A).
+	sev_seg_write_byte(SEV_SEG_DECODE_MODE_B, 0xFF << (word_length - 8));	//Set the decode mode bits corresponding to digits 8-15 (driver B).
+
+	if (word_length > 8)	//If the word is large enough (> 8 digits) to require both drivers A and B.
+	{
+		for (i = 0; i < 8; i++)						//Loop 8 times for the first 8 digits (driver A)
+		{
+			sev_seg_write_byte(SEV_SEG_DIGIT_0 + i, word[i]);	//Display the character.
+		}
+		for (i = 8; i < word_length; i++)				//Loop for the remaining digits (driver B)
+		{
+			sev_seg_write_byte(SEV_SEG_DIGIT_8 + (i - 8), word[i]);	//Display the character.
+		}
+	}
+	else
+	{
+		for (i = 0; i < word_length; i++)				//Loop for every digit required.
+		{
+			sev_seg_write_byte(SEV_SEG_DIGIT_0 + i, word[i]);	//Display the character.
+		}
+	}
+}
+
+//Display "pseudo-text" on the seven-segment display.
+//Assume all digits currently operating in Code B decode mode when this function is entered.
+void sev_seg_flash_word(uint8_t *word, uint8_t word_length, uint16_t duration_ms)
+{
+	sev_seg_all_clear();			//Clear all digits (only works while in code b decode mode).
+	sev_seg_power(OFF);			//Turn off both display drivers (prevents artifacts when changing to manual decode).
+	sev_seg_set_word(word, word_length);	//Set up the drivers to display the pseudo-text.
+	sev_seg_power(ON);			//Turn off both display drivers (prevents artifacts when changing to manual decode).
 
 	while(duration_ms--)			//Keep the "text" displayed for "duration_ms" milliseconds (can't pass variables directly to _delay_ms()).
 	{
@@ -588,7 +647,6 @@ void sev_seg_display_word(uint8_t *word, uint16_t duration_ms)
 	sev_seg_power(OFF);			//Turn off both display drivers (prevents artifacts when changing back to Code B decode).
 	sev_seg_decode_mode(DECODE_CODE_B);	//Switch back into Code B decode mode for all digits.
 	sev_seg_all_clear();			//Clear all digits (note this function only works in Code B mode).
-	clear_disp_buffer();			//Also clear all digits in the display buffer.
 	sev_seg_power(ON);			//Switch the display back on (will be blank).
 }
 
@@ -600,7 +658,7 @@ void sev_seg_startup_ani(void)
 
 	uint8_t i, j;			//Initialise a couple of integers for loops.
 
-	sev_seg_display_word(splash, 3000);	//Display the "Splash-Screen" (pseudo text).
+	sev_seg_flash_word(splash, sizeof(splash), 3000);	//Display the "Splash-Screen" (pseudo text).
 
 	//The following nested loops scans the decimal point (DP) right to left then back a few times.
 	for (j = 0; j < 5; j++)		//Repeat main animation sequence 5 times.
