@@ -53,8 +53,8 @@ void hardware_init(void)
 	sev_seg_init();				//Initialise the two cascaded max7219 chips that will drive the 16 7-segment digits (spi comms).
 	rtc_init();				//Initialise the hardware for spi comms with the DS3234 RTC.
 
-
-	PCICR |= (1 << BUTTON_PCIE);		//Enable Pin-Change Interrupt for pin-change int pins PCINT[8-14].  This includes both buttons.
+	//Disabled the following setting of PCICR until macro "BUTTONS_ENABLED" is called thus disabling buttons during start-up until after first sync attempt.
+	//PCICR |= (1 << BUTTON_PCIE);		//Enable Pin-Change Interrupt for pin-change int pins PCINT[8-14].  This includes both buttons.
 						//PCICR: Pin-Change Interrupt Control Register
 	BUTTON_PCMSK |= ((1 << BUTTON_MODE) | (1 << BUTTON_SYNC));
 						//Enable Pin-Change Interrupt on PCINT[x] for PCINT pins to which the 5 buttons are connected.
@@ -62,7 +62,18 @@ void hardware_init(void)
 	BUTTON_PORT |= ((1 << BUTTON_MODE) | (1 << BUTTON_SYNC));
 						//Enable pull-up resistors for the buttons.
 
-	sei();			//Global enable interrups (requires avr/interrupt.h)
+	sei();					//Global enable interrups (requires avr/interrupt.h).
+}
+
+//Initialise (validate and set) settings that are stored in eeprom.
+void settings_init(void)
+{
+	validate_eeprom_offset();					//Confirm the UTC time offset value stored in eeprom is valid.
+	offset = (int8_t) eeprom_read_byte(OFFSET_EEPROM_ADDRESS);	//set the "offset" variable to what is stored in eeprom.
+
+	validate_eeprom_intensity();					//Confirm the intensity (brightness) value stored in eeprom is valid.
+	intensity = eeprom_read_byte(INTENSITY_EEPROM_ADDRESS);		//Initialise the global "intensity" variable to value in eeprom.
+	sev_seg_set_intensity(intensity);				//Set the display intensity accordingly.
 }
 
 //This function validates the GMT time offset value saved in eeprom.
@@ -72,7 +83,6 @@ void hardware_init(void)
 //Have to typecast byte as a signed int as only unsigned integers are stored in eeprom.
 void validate_eeprom_offset(void)
 {
-
 	if
 	(
 		((int8_t)eeprom_read_byte(OFFSET_EEPROM_ADDRESS) % 5) ||		//Returns true if there is a remainder after dividing by 5, OR
@@ -84,16 +94,28 @@ void validate_eeprom_offset(void)
 	}
 }
 
+//This function validates the intensity (brightness) value saved in eeprom.
+//The intensity is stored in eeprom so it is retained when power is lost (also when AVR is reprogrammed provided the save_eeprom fuse is set).
+//This if statement will ensure it is a valid value (integer range 0 to 15 inclusive).
+//If the value is invalid, set it to 8.  On a new chip eeprom memory would be defaulted to 0xFF.
+void validate_eeprom_intensity(void)
+{
+	if (eeprom_read_byte(INTENSITY_EEPROM_ADDRESS) > 15)		//Returns true if the value is greaterss than 15.
+	{
+		eeprom_update_byte((uint8_t *) INTENSITY_EEPROM_ADDRESS, 8);	//set the offset value stored in eeprom to 8.
+	}
+}
+
 //This function will call other functions depending on the currently selected display mode.
 void poll(void)
 {
 	switch (mode)	//Thhis switch is used to setup the display depending on which mode is selected.
 	{
 		//Modes 1A, 1B, 2A and 2B are all variations on the ISO-8601 date/time display.
-		case (MODE_1A_ISO) :	//	|Y Y Y Y M M D D     H H M M S S |
-		case (MODE_1B_ISO) :	//	|Y Y Y Y.M M.D D.    H H.M M.S S.|
-		case (MODE_2A_ISO) :	//	|  Y Y Y Y M M D D H H M M S S   |
-		case (MODE_2B_ISO) :	//	|  Y Y Y Y.M M.D D.H H.M M.S S.  |
+		case (MODE_1A_ISO) :		//	|Y Y Y Y M M D D     H H M M S S |
+		case (MODE_1B_ISO) :		//	|Y Y Y Y.M M.D D.    H H.M M.S S.|
+		case (MODE_2A_ISO) :		//	|  Y Y Y Y M M D D H H M M S S   |
+		case (MODE_2B_ISO) :		//	|  Y Y Y Y.M M.D D.H H.M M.S S.  |
 			display_iso_time();
 		break;
 
@@ -108,7 +130,7 @@ void poll(void)
 		break;
 
 		//Mode 5 allows setting the LED brightness level for all digits (level 0 to 10).
-		case (MODE_5_INTENSITY) :		//	|I n t E n S I t y           # # |
+		case (MODE_5_INTENSITY) :	//	|I n t E n S I t y           # # |
 			get_intensity();
 		break;
 	}
@@ -121,7 +143,16 @@ void display_iso_time(void)
 	uint8_t time_offset = 0;	//This offset will determine how many digits after the date that the time will start.
 	uint8_t delimiters = 0;		//This flag will be used to activate the decimal point if the current mode requires it.
 	uint8_t current_mode = mode;	//This variable will be used to check for mode change that will exit the while loop.
-	uint8_t i;	//General use integer for running for loops.
+	uint8_t i;			//General use integer for running for loops.
+
+	//Initialise array "buffer" which will consist of 16 data void settings_init(void)bytes that will be sent to the seven-segment display drivers.
+	//I.e. each element is the data to be used for each of the 16 7-seg digits.
+	uint8_t buffer[16];		//buffer[0] = digit 0	<--Least-Significant Digit (Right)
+					//buffer[1] = digit 1
+					//buffer[2] = digit 2
+					//	...	 =  ...
+					//buffer[14] = digit 14
+					//buffer[15] = digit 15	<--Least-Significant Digit (Right)
 
 	//This switch used to set the positions of the date and time within the 16-digit display.
 	switch (mode)
@@ -153,10 +184,10 @@ void display_iso_time(void)
 		break;
 	}
 
-	//This loop will clear every digit in the display buffer to prevent artifacts from previous modes.
+	//This loop will initialise all 16 elements in the buffer array to represent a blank digit.
 	for (i = 0; i < 16; i++)
 	{
-		disp_buffer[i] = SEV_SEG_CODEB_BLANK;
+		buffer[i] = SEV_SEG_CODEB_BLANK;
 	}
 
 	//All static date required to display in accordance with the selected mode is set,
@@ -174,35 +205,21 @@ void display_iso_time(void)
 		//This loop will set the display buffer digits for the date components (CEN, YEA, MON, DAT).
 		for (i = 0; i < 8; i++)
 		{
-			disp_buffer[i + date_offset] = time[i];			//"date_offset" determined by current mode.
+			buffer[i + date_offset] = time[i];			//"date_offset" determined by current mode.
 		}
 
 		//This loop will set the display buffer digits for the time components (HOU, MIN, SEC).
 		for (i = 8; i < 14; i++)
 		{
-			disp_buffer[i + date_offset + time_offset] = time[i];	//"time_offset" determined by current mode.
+			buffer[i + date_offset + time_offset] = time[i];	//"time_offset" determined by current mode.
 		}
 
-		refresh_display();	//send the display buffer data to the sev-seg display drivers.
-	}
-}
-
-//This function will write data to the display buffer that corresponds to a blank digit (all segments off) for all 16 (Code B mode only).
-void clear_disp_buffer(void)
-{
-	for (uint8_t i = 0; i < 16; i++)		//Repeat for all 16 digits (0 to 15).
-	{
-		disp_buffer[i] = SEV_SEG_CODEB_BLANK;	//Set the element to the data that corresponds to a blank digit.
-	}
-}
-
-//This function will take the contents of the display buffer array and send it to the seven segment display drivers
-void refresh_display(void)
-{
-	for (uint8_t i = 0; i < 8; i++)	//Each iteration will send a digit to driver A and a digit to driver B so 8 iterations sends all 16 digits.
-	{
-		sev_seg_write_byte(SEV_SEG_DIGIT_0 + i, disp_buffer[i]);	//Send the digit for driver A (digits 0 to 7).
-		sev_seg_write_byte(SEV_SEG_DIGIT_8 + i, disp_buffer[i+8]);	//Send the digit for driver B (digits 8 to 15).
+		//Take the contents of the buffer array and send it to the seven segment display drivers
+		for (uint8_t i = 0; i < 8; i++)	//Each iteration will send a digit to driver A and a digit to driver B so 8 iterations sends all 16 digits.
+		{
+			sev_seg_write_byte(SEV_SEG_DIGIT_0 + i, buffer[i]);	//Send the digit for driver A (digits 0 to 7).
+			sev_seg_write_byte(SEV_SEG_DIGIT_8 + i, buffer[i+8]);	//Send the digit for driver B (digits 8 to 15).
+		}
 	}
 }
 
@@ -287,6 +304,8 @@ void cycle_offset(void)
 //Attempt to sync thr RTC time to GPS data.  Display status on-screen using pseudo-text.
 void attempt_sync(void)
 {
+	BUTTONS_DISABLE;	//Disable pin-change interrupts effectively disabling the buttons so that the sync function is less likely to produce an error.
+
 	//Attempt to sync rtc time with gps time.
 	sev_seg_flash_word(syncing, sizeof(syncing), 2000);		//Display "SynCIng" for 3 seconds.
 	if (!sync_time(time))				//If the sync is unsuccessful...
@@ -297,11 +316,14 @@ void attempt_sync(void)
 	{
 		sev_seg_flash_word(success, sizeof(success), 1000);	//Display "SUCCESS" for 3 seconds.
 	}
+
+	BUTTONS_ENABLE;		//Re-enable the buttons just prior to exiting the function.
 }
 
 //This function will update the time array by parsing the date and time from the GPS module.
 uint8_t sync_time (uint8_t *time)
 {
+
 	usart_print_string("\r\nSyncing...");	//For debugging; indicates entering sync loop
 
 	uint8_t i;	//Initialise an integer to use in for loops
@@ -347,12 +369,11 @@ uint8_t sync_time (uint8_t *time)
 	}
 
 	//Basic error checking.  All digits in the date/time array "time[]" should be 0-9.  If anything else is found, exit the function and return FALSE.
-	for(i = YEA_TENS; i <= SEC_ONES; i++)		//Loop through all elements of the "time" array (excluding manually set century).
+	for(i = YEA_TENS; i <= SEC_ONES; i++)	//Loop through all elements of the "time" array (excluding manually set century).
 	{
-		if(time[i] > 9)				//If any element is an integer larger than 9, then the data is no good.
+		if(time[i] > 9)			//If any element is an integer larger than 9, then the data is no good.
 		{
-			//usart_print_string("No good.");	//Print to usart for debugging.
-			return(FALSE);			//If the time data is no good, exit the function and return FALSE.
+			return(FALSE);		//If the time data is no good, exit the function and return FALSE.
 		}
 		else
 		{
@@ -584,18 +605,27 @@ void get_intensity(void)
 		sev_seg_display_int(intensity);					//Display the current intensity integer value om the right.
 		//PLACEHOLDER - Call function to set the brightness level.
 	}
+
 	sev_seg_decode_mode(DECODE_CODE_B);	//Return all digits to Code B decode mode.
+
+	if (intensity != eeprom_read_byte(INTENSITY_EEPROM_ADDRESS))		//If the mode has changed and the intensity is different to what's in eeprom...
+	{
+		eeprom_update_byte((uint8_t *) INTENSITY_EEPROM_ADDRESS, intensity);	//Record the new value to eeprom.
+	}
 }
 
 //Increment the offset value and rollover when maximum value is exceeded.
 //This function is called when the "Sync" button is pressed only when running Mode 4.
 void cycle_intensity(void)
 {
-	intensity ++;			//Increment intensity.
-	if (intensity > 9)		//If maximum valid value (9) is exceeded...
+	intensity ++;								//Increment intensity.
+	if (intensity > 15)							//If maximum valid value (9) is exceeded...
 	{
-		intensity = 1;		//Rollover to minimum valid value (1).
+		intensity = 0;							//Rollover to minimum valid value (1).
+		sev_seg_write_byte(SEV_SEG_DIGIT_14, SEV_SEG_CODEB_BLANK);	//Changing the intensity from 15 to zero requires the tens digit to be cleared.
 	}
+
+	sev_seg_set_intensity(intensity);					//Every time the intensity value changes, actually re-set the intensity.
 }
 
 
@@ -607,6 +637,7 @@ void sev_seg_set_word(uint8_t *word, uint8_t word_length)
 {
 	uint8_t i = 0;	//Initiate an integer for loops.
 
+	//Set the required number of digits to manual decode mode (0) leaving unrequired digits in code B mode (1).
 	sev_seg_write_byte(SEV_SEG_DECODE_MODE_A, 0xFF << (word_length));	//Set the decode mode bits corresponding to digits 0-7 (driver A).
 	sev_seg_write_byte(SEV_SEG_DECODE_MODE_B, 0xFF << (word_length - 8));	//Set the decode mode bits corresponding to digits 8-15 (driver B).
 
@@ -653,9 +684,6 @@ void sev_seg_flash_word(uint8_t *word, uint8_t word_length, uint16_t duration_ms
 //Simple startup animation that displays "ISO-8601" then scans the decimal point (DP) right to left then back a few times.
 void sev_seg_startup_ani(void)
 {
-	clear_disp_buffer();		//Start by setting all 16 digits in the buffer to blank (off).
-	refresh_display();		//Refresh the display in accordance with the buffer (i.e. clear all digits);
-
 	uint8_t i, j;			//Initialise a couple of integers for loops.
 
 	sev_seg_flash_word(splash, sizeof(splash), 3000);	//Display the "Splash-Screen" (pseudo text).
@@ -663,43 +691,39 @@ void sev_seg_startup_ani(void)
 	//The following nested loops scans the decimal point (DP) right to left then back a few times.
 	for (j = 0; j < 5; j++)		//Repeat main animation sequence 5 times.
 	{
+		//Note, to increment through all digits, going from DIGIT_7 (0x08) to DIGIT_8 (0x81) requires an addition of 0x78.
+		//Therefore, adding (0x78 multiplied by i/8) only applies the addition of 0x78 for i greater than 8 (i is an integer remainders are ignored).
 		for (i = 0; i < 16; i++)	//Increment the following through all 16 digits 0 to 15 (left to right).
 		{
-			disp_buffer[i] = (SEV_SEG_CODEB_BLANK | SEV_SEG_DP);	//Turn on the decimal point for the current digit.
-			refresh_display();					//Refresh the display in accordance with the buffer.
-			_delay_ms(20);						//Short pause.
-			clear_disp_buffer();					//Clear the decimal point from the buffer.
+			//Turn on the decimal point for the current digit.
+			sev_seg_write_byte(SEV_SEG_DIGIT_0 + i + (0x78 * (i/8)), SEV_SEG_CODEB_BLANK | SEV_SEG_DP);
+			_delay_ms(20);			//Pause for milliseconds.
+			sev_seg_all_clear();		//Clear the DP (and all digits).
 		}
-		for (i = 15; i < 250; i--)	//Decrement the following through all 16 digits 0 to 15 (right to left).
+		for (i = 15; i < 255; i--)	//Decrement the following through all 16 digits 15 to 0 (right to left).
 		{
-			disp_buffer[i] = (SEV_SEG_CODEB_BLANK | SEV_SEG_DP);	//Turn on the decimal point for the current digit.
-			refresh_display();					//Refresh the display in accordance with the buffer.
-			_delay_ms(20);						//Short pause.
-			clear_disp_buffer();					//Clear the decimal point from the buffer.
+			sev_seg_write_byte(SEV_SEG_DIGIT_0 + i + (0x78 * (i/8)), SEV_SEG_CODEB_BLANK | SEV_SEG_DP);
+			_delay_ms(20);			//Pause for milliseconds.
+			sev_seg_all_clear();		//Clear the DP (and all digits).
 		}
 	}
-
-	clear_disp_buffer();		//End by setting all 16 digits in the buffer to blank (off).
-	refresh_display();		//Refresh the display in accordance with the buffer (i.e. clear all digits);
 }
-
 
 int main(void)
 {
-	hardware_init();						//initialise the hardware peripherals
+	hardware_init();	//initialise the hardware peripherals.
 
-	validate_eeprom_offset();					//Confirm the UTC time offset value stored in eeprom is valid.
-	offset = (int8_t) eeprom_read_byte(OFFSET_EEPROM_ADDRESS);	//set the "offset" variable to what is stored in eeprom.
+	settings_init();	//Initialise (validate and set) system settings stored in eeprom.
 
-	sev_seg_startup_ani();						//Run through the start-up animation.
+	sev_seg_startup_ani();	//Run through the start-up animation.
 
-	attempt_sync();							//Attempt to sync the RTC time with GPS data.
+	attempt_sync();		//Attempt to sync the RTC time with GPS data.
 
-	while (1)	//Main infinite loop.
+	while (1)		//Main infinite loop.
 	{
 
 		poll();		//Poll the selected mode and take the appropriate action..
 
 	}
-	return 0;	//Never reached.
+	return 0;		//Never reached.
 }

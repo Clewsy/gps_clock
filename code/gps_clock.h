@@ -23,12 +23,21 @@
 #define BUTTON_SYNC			PC1		//PC1: PCINT9
 #define BUTTON_PCI_VECTOR		PCINT1_vect	//PCINT1: Pin-Change Interrupt 1 - Define the interrupt sub-routine vector function name.
 #define BUTTON_DEBOUNCE_DURATION	20		//Define the duration in ms to wait to avoide button "bounce".
+#define BUTTONS_ENABLE			PCICR |= (1 << BUTTON_PCIE);	//Enable Pin-Change Interrupt for pin-change int pins PCINT[8-14].
+#define BUTTONS_DISABLE			PCICR &= !(1 << BUTTON_PCIE);	//Disable Pin-Change Interrupt for pin-change int pins PCINT[8-14].
 
 //Allocate an address within the AVR's eeprom to store the GMT time offset value so that the offset is retained after a power-cycle.
 //Valid value for the offset is a multiple of 5 from -120 to +120 which represents an offset range of -12.0 hrs to +12.0 hours in 0.5 hour increments.
 //Note, "(uint8_t *)" is required to typecast an integer pointer as that is what's expected by the function eeprom_read_byte() expects.
 //Without this typecast, a warning will be generated for any non-zero address.
 #define OFFSET_EEPROM_ADDRESS (uint8_t *) 5
+
+//Allocate an address within the AVR's eeprom to store the intensity (brightness) value so that the selected intensity is retained after a power-cycle.
+//Valid value for the intensity is 0 to 15 as per the datasheet.
+//Note, "(uint8_t *)" is required to typecast an integer pointer as that is what's expected by the function eeprom_read_byte() expects.
+//Without this typecast, a warning will be generated for any non-zero address.
+#define INTENSITY_EEPROM_ADDRESS (uint8_t *) 6
+
 
 //Define the display modes
 //Mode 1 shows the date on the left and the time on the right with two blank segments between them.
@@ -119,8 +128,9 @@ uint8_t mode = MODE_1B_ISO;
 //To avoid using floats, offset actually ranges from -120 to 120 and is adjusted in increments of 5 (representing half an hour).
 int8_t offset;	//Value is initialised in the main function by reading the value stored in eeprom.
 
-//"intensity" represents the brightness level of the seven-segment displays.
-uint8_t intensity = 5;
+//"intensity" represents the brightness level of the seven-segment displays (valid range integer from 0 to 15).
+//Needs to be global as the function for setting intensity is called from an interrupt sub-routine.
+uint8_t intensity;
 
 //Initialise global array "time" which shall include all the time and date data pulled from the RTC or GPS.  Bytes will be binary-coded deciaml (BCD):
 uint8_t time[SIZE_OF_TIME_ARRAY];	//time[0]  = time[CEN_TENS] : Century tens,	1 or 2
@@ -137,15 +147,6 @@ uint8_t time[SIZE_OF_TIME_ARRAY];	//time[0]  = time[CEN_TENS] : Century tens,	1 
 					//time[11] = time[MIN_ONES] : Minute ones,	0 to 9
 					//time[12] = time[SEC_TENS] : Second tens,	0 to 5
 					//time[13] = time[SEC_ONES] : Second ones,	0 to 9
-
-//Initialise global array "disp_buffer" which will consist of 16 data bytes that will be sent to the seven-segment display drivers.
-//I.e. each element is the data to be used for each of the 16 7-seg digits.
-uint8_t disp_buffer[16];		//disp_buffer[0] = digit 0	<--Least-Significant Digit (Right)
-					//disp_buffer[1] = digit 1
-					//disp_buffer[2] = digit 2
-					//	...	 =  ...
-					//disp_buffer[14] = digit 14
-					//disp_buffer[15] = digit 15	<--Least-Significant Digit (Right)
 
 //Global static array declarations for using manual decode mode to print pseudo "text" to the seven-seg displays (i.e. using sev_seg_flash_word()).
 static uint8_t splash[16] = {
@@ -173,11 +174,11 @@ static uint8_t offset_text[6] = {
 //Function Declarations//
 /////////////////////////
 void hardware_init(void);			//Initialise the peripherals.
+void settings_init(void);			//Initialise (validate and set) settings that are stored in eeprom (UTC time offset and intensity (brightness).
 void validate_eeprom_offset(void);		//Read the UTC time offset value from eeprom and confirm that it is valid.
+void validate_eeprom_intensity(void);		//Read the UTC intensity (brightness) value from eeprom and confirm that it is valid.
 void poll(void);				//Poll the current selected mode and run the according function.
 void display_iso_time(void);			//Display the time in a standard ISO-8601 format.
-void clear_disp_buffer(void);			//Write data to the display buffer that corresponds to a blank digit (all segments off) for all 16.
-void refresh_display(void);			//Take the contents of the display buffer array and send it to the seven segment display drivers.
 void display_epoch_time(void);			//Display UNIX Epoch time (seconds elapsed since 1970.01.01.00.00.00).
 void get_offset(void);				//Enables alteration of the time offset from UTC (time data from the GPS module is always UTC).
 void display_offset(void);			//Display the current offset value using the last 3 digits (-11.5 to 12.0).

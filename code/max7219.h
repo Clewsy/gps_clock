@@ -112,4 +112,5 @@ void sev_seg_init(void);				//Initialise both the display drivers.
 void sev_seg_all_clear(void);				//Clears all digits (needs to be in CODE-B mode).
 void sev_seg_power(uint8_t on_or_off);			//Turns display on or off without changing any other registers.
 void sev_seg_decode_mode(uint8_t decode_mode);		//Sets all digits on both drivers to decode mode "manual" or "code B".
+void sev_seg_set_intensity(uint8_t intensity);		//Sets the intesity (brightnes) level of all 16 digits (valid values 0x0 to 0xF).
 void sev_seg_display_int(uint64_t num);			//Takse any 64-bit integer and displays the decimal value using the 16 7-seg digits.

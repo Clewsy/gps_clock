@@ -100,18 +100,39 @@ void sev_seg_decode_mode(uint8_t decode_mode)
 	sei();		//Re-enable interrupts.
 }
 
+void sev_seg_set_intensity(uint8_t intensity)
+{
+	cli();		//Temporarily disable interrupts so that spi communications are not corrupted.
+
+	SEV_SEG_LOAD_LOW;				//Drop the level of the LOAD pin.
+	spi_trade_byte(SEV_SEG_INTENSITY_B);		//Push in address for decode mode (will be in driver B at latch).
+	spi_trade_byte(intensity);			//Push in data to set decode mode : 0x00=all manual, OxFF=all Code B (will be in driver B at latch).
+	spi_trade_byte(SEV_SEG_INTENSITY_A);		//Push in address for decode mode (will be in driver A at latch).
+	spi_trade_byte(intensity);			//Push in data to set decode mode : 0x00=all manual, OxFF=all Code B (will be in driver A at latch).
+	SEV_SEG_LOAD_HIGH;				//Raise the level of the LOAD pin - triggers latching of the sent bytes (last 16 bits latched).
+
+	sei();		//Re-enable interrupts.
+}
+
 //Takse any 64-bit integer and displays the decimal value using the 16 7-seg digits.  Least-significant digit will be displayed to the far right (digit 15).
 void sev_seg_display_int(uint64_t num)
 {
-	int i = SEV_SEG_DIGIT_15;			//First digit (least-sig) will be displayed on 7-seg digit 15 (far right).
-	while(num > 0)					//Loop until the 64-bit integer has been divided to zero.
+	if (num)						//If the passed-in variable "num" is non-zer0:
 	{
-		sev_seg_write_byte(i, (num % 10));	//Write the digit (num modulus 10 gives remainder i.e. 'ones' of the integer)
-		num /= 10;				//Divide num by 10 so that next iteration of loop will determine the next digit.  I.e. remove LS digit.
-		i--;					//Decrement the 7-seg display digit address so that next iteration displays digit to the left.
-		if(i == SEV_SEG_NO_OP_B)		//Decrement from address of dig 8 (driver B) requires resetting the address to dig 7 (driver A).
+		int i = SEV_SEG_DIGIT_15;			//First digit (least-sig) will be displayed on 7-seg digit 15 (far right).
+		while(num > 0)					//Loop until the 64-bit integer has been divided to zero.
 		{
-			i = SEV_SEG_DIGIT_7;
+			sev_seg_write_byte(i, (num % 10));	//Write the digit (num modulus 10 gives remainder i.e. 'ones' of the integer)
+			num /= 10;				//Divide num by 10 so that next iteration will determine the next digit.  I.e. remove LS digit.
+			i--;					//Decrement the 7-seg display digit address so that next iteration displays digit to the left.
+			if(i == SEV_SEG_NO_OP_B)		//Decrement from address of dig 8 (driver B) requires resetting the address to dig 7 (driver A).
+			{
+				i = SEV_SEG_DIGIT_7;
+			}
 		}
+	}
+	else							//Else "num" must be zero.
+	{
+		sev_seg_write_byte(SEV_SEG_DIGIT_15, 0);	//Just print a 0 on digit 15.
 	}
 }
