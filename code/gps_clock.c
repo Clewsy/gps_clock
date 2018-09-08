@@ -237,7 +237,7 @@ void display_epoch_time(void)
 			sev_seg_write_byte(SEV_SEG_DIGIT_0 + i, epoch_text[i]);	//Write the pseudo-text "EPOCH-"
 		}
 
-		rtc_get_time(time);		//Update the current time from the rtc.
+		rtc_get_time(time);	//Update the current time from the rtc.
 
 		//Time to calculate the epoch time.  This will work for any date time from Jan 1st 2000 until Dec 31st 2100.
 		epoch =  EPOCH_SECONDS_TO_2000;						//Seconds elapsed from 19700101000000 to 20000101000000.
@@ -307,14 +307,14 @@ void attempt_sync(void)
 	BUTTONS_DISABLE;	//Disable pin-change interrupts effectively disabling the buttons so that the sync function is less likely to produce an error.
 
 	//Attempt to sync rtc time with gps time.
-	sev_seg_flash_word(syncing, sizeof(syncing), 2000);		//Display "SynCIng" for 3 seconds.
-	if (!sync_time(time))				//If the sync is unsuccessful...
+	sev_seg_flash_word(syncing, sizeof(syncing), 2000);		//Display "SynCIng" for 2 seconds.
+	if (!sync_time(time))						//If the sync is unsuccessful...
 	{
-		sev_seg_flash_word(no_sync, sizeof(no_sync), 1000);	//Display "nO SynC" for 3 seconds.
+		sev_seg_flash_word(no_sync, sizeof(no_sync), 1000);	//Display "nO SynC" for 1 seconds.
 	}
-	else						//If the sync was successful...
+	else								//If the sync was successful...
 	{
-		sev_seg_flash_word(success, sizeof(success), 1000);	//Display "SUCCESS" for 3 seconds.
+		sev_seg_flash_word(success, sizeof(success), 1000);	//Display "SUCCESS" for 1 seconds.
 	}
 
 	BUTTONS_ENABLE;		//Re-enable the buttons just prior to exiting the function.
@@ -571,7 +571,7 @@ void rollover_days(void)
 				time[DAY_ONES] = 1;
 				time[MON_ONES] ++;
 			}
-			else if (DAY > 29)			//It must be a leap year.
+			else if (DAY > 29)		//It must be a leap year.
 			{
 				time[DAY_TENS] = 0;
 				time[DAY_ONES] = 1;
@@ -596,7 +596,7 @@ void rollover_days(void)
 //(Note, to avoid using floats, the actual offset value is an integer from -120 to 120)
 void get_intensity(void)
 {
-	sev_seg_all_clear();							//Clear all digits to prevent artifacts from previous mode.
+	sev_seg_all_clear();			//Clear all digits to prevent artifacts from previous mode.
 
 	//Enter a loop that will continuously refresh the display and allow adjustment of the offset.
 	while (mode == MODE_5_INTENSITY)					//Run the following loop until the mode is changed.
@@ -635,29 +635,15 @@ void cycle_intensity(void)
 //Note, if required, code B mode must be restored manually after this function is complete ("sev_seg_decode_mode(DECODE_CODE_B)").
 void sev_seg_set_word(uint8_t *word, uint8_t word_length)
 {
-	uint8_t i = 0;	//Initiate an integer for loops.
-
 	//Set the required number of digits to manual decode mode (0) leaving unrequired digits in code B mode (1).
 	sev_seg_write_byte(SEV_SEG_DECODE_MODE_A, 0xFF << (word_length));	//Set the decode mode bits corresponding to digits 0-7 (driver A).
 	sev_seg_write_byte(SEV_SEG_DECODE_MODE_B, 0xFF << (word_length - 8));	//Set the decode mode bits corresponding to digits 8-15 (driver B).
 
-	if (word_length > 8)	//If the word is large enough (> 8 digits) to require both drivers A and B.
+	//Note, to increment through all digits, going from DIGIT_7 (0x08) to DIGIT_8 (0x81) requires an addition of 0x78.
+	//Therefore, adding (0x78 multiplied by i/8) only applies the addition of 0x78 for i greater than 8 (i is an integer so remainders are ignored).
+	for (uint8_t i = 0; i < word_length; i++)
 	{
-		for (i = 0; i < 8; i++)						//Loop 8 times for the first 8 digits (driver A)
-		{
-			sev_seg_write_byte(SEV_SEG_DIGIT_0 + i, word[i]);	//Display the character.
-		}
-		for (i = 8; i < word_length; i++)				//Loop for the remaining digits (driver B)
-		{
-			sev_seg_write_byte(SEV_SEG_DIGIT_8 + (i - 8), word[i]);	//Display the character.
-		}
-	}
-	else
-	{
-		for (i = 0; i < word_length; i++)				//Loop for every digit required.
-		{
-			sev_seg_write_byte(SEV_SEG_DIGIT_0 + i, word[i]);	//Display the character.
-		}
+		sev_seg_write_byte(SEV_SEG_DIGIT_0 + i + (0x78 * (i/8)), word[i]);	//Display the character.
 	}
 }
 
@@ -692,7 +678,7 @@ void sev_seg_startup_ani(void)
 	for (j = 0; j < 5; j++)		//Repeat main animation sequence 5 times.
 	{
 		//Note, to increment through all digits, going from DIGIT_7 (0x08) to DIGIT_8 (0x81) requires an addition of 0x78.
-		//Therefore, adding (0x78 multiplied by i/8) only applies the addition of 0x78 for i greater than 8 (i is an integer remainders are ignored).
+		//Therefore, adding (0x78 multiplied by i/8) only applies the addition of 0x78 for i greater than 8 (i is an integer so remainders are ignored).
 		for (i = 0; i < 16; i++)	//Increment the following through all 16 digits 0 to 15 (left to right).
 		{
 			//Turn on the decimal point for the current digit.
