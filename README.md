@@ -8,4 +8,7 @@ gps_clock has the following features and characteristics:
 
 The code , schematic and PCB layout are all included here on github.
 
+Proudly mentioned at hackaday.com.
+https://hackaday.com/2018/09/18/epic-clock-clocks-the-unix-epoch/
+
 ![The completed gps_clock.](https://raw.githubusercontent.com/Clewsy/gps_clock/master/gps_clock_github_photo.jpg)
