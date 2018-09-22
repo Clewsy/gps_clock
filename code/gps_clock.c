@@ -9,10 +9,10 @@ ISR(BUTTON_PCI_VECTOR)
 	//If statement captures press of the "Mode" button.  Cycles through the various display modes.
 	if(!(BUTTON_PINS & (1 << BUTTON_MODE)))
 	{
-		sev_seg_power(OFF);
+		sev_seg_power(OFF);			//Blank the display while settings are changed.
 		sev_seg_decode_mode(DECODE_CODE_B);	//Whenever the mode is changed, return all digits to default Code B decode mode.
 		sev_seg_all_clear();			//Clear all digits to avoid artifacts between display modes.
-		sev_seg_power(ON);
+		sev_seg_power(ON);			//Reactivate display now that settings are changed.
 
 		mode++;					//Increment the mode.
 		if(mode > MODE_5_INTENSITY)		//If largest mode value reached.

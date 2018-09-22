@@ -30,13 +30,13 @@
 //Valid value for the offset is a multiple of 5 from -120 to +120 which represents an offset range of -12.0 hrs to +12.0 hours in 0.5 hour increments.
 //Note, "(uint8_t *)" is required to typecast an integer pointer as that is what's expected by the function eeprom_read_byte() expects.
 //Without this typecast, a warning will be generated for any non-zero address.
-#define OFFSET_EEPROM_ADDRESS (uint8_t *) 5
+#define OFFSET_EEPROM_ADDRESS (uint8_t *) 5	//Arbitrary value, just keep it different to INTENSITY_EEPROM_ADDRESS.
 
 //Allocate an address within the AVR's eeprom to store the intensity (brightness) value so that the selected intensity is retained after a power-cycle.
 //Valid value for the intensity is 0 to 15 as per the datasheet.
 //Note, "(uint8_t *)" is required to typecast an integer pointer as that is what's expected by the function eeprom_read_byte() expects.
 //Without this typecast, a warning will be generated for any non-zero address.
-#define INTENSITY_EEPROM_ADDRESS (uint8_t *) 6
+#define INTENSITY_EEPROM_ADDRESS (uint8_t *) 6	//Arbitrary value, just keep it different to OFFSET_EEPROM_ADDRESS.
 
 
 //Define the display modes
