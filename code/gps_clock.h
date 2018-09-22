@@ -22,7 +22,7 @@
 #define BUTTON_MODE			PC0		//PC0: PCINT8
 #define BUTTON_SYNC			PC1		//PC1: PCINT9
 #define BUTTON_PCI_VECTOR		PCINT1_vect	//PCINT1: Pin-Change Interrupt 1 - Define the interrupt sub-routine vector function name.
-#define BUTTON_DEBOUNCE_DURATION	50		//Define the duration in ms to wait to avoide button "bounce".
+#define BUTTON_DEBOUNCE_DURATION	100		//Define the duration in ms to wait to avoide button "bounce".
 #define BUTTONS_ENABLE			PCICR |= (1 << BUTTON_PCIE);	//Enable Pin-Change Interrupt for pin-change int pins PCINT[8-14].
 #define BUTTONS_DISABLE			PCICR &= !(1 << BUTTON_PCIE);	//Disable Pin-Change Interrupt for pin-change int pins PCINT[8-14].
 

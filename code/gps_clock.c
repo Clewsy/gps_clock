@@ -9,17 +9,21 @@ ISR(BUTTON_PCI_VECTOR)
 	//If statement captures press of the "Mode" button.  Cycles through the various display modes.
 	if(!(BUTTON_PINS & (1 << BUTTON_MODE)))
 	{
+		sev_seg_power(OFF);
 		sev_seg_decode_mode(DECODE_CODE_B);	//Whenever the mode is changed, return all digits to default Code B decode mode.
 		sev_seg_all_clear();			//Clear all digits to avoid artifacts between display modes.
+		sev_seg_power(ON);
+
 		mode++;					//Increment the mode.
 		if(mode > MODE_5_INTENSITY)		//If largest mode value reached.
 		{
 			mode = MODE_1A_ISO;		//Cycle back to first mode.
 		}
+
 		while(BUTTON_PINS & (1 << BUTTON_MODE))	//Keep refreshing the display until the button is released.
 		{
 			rtc_get_time(time);		//Update the current time from the rtc.
-			poll();				//Display the current time.
+			poll();				//Display the current time/mode.
 		}
 	}
 
@@ -40,7 +44,7 @@ ISR(BUTTON_PCI_VECTOR)
 		}
 	}
 
-	sei();	Re-enable interrupts.
+	sei();	//Re-enable interrupts.
 }
 
 //Initialise the peripherals.
@@ -123,12 +127,12 @@ void poll(void)
 		break;
 
 		//Mode 3 displays Epoch time (unix time) which is the number of seconds since midnight, January first, 1970 (i.e. 19700101000000).
-		case (MODE_3_EPOCH) :		//	|E P O C H   S S S S S S S S S S |
+		case (MODE_3_EPOCH) :		//	|E P O C H - S S S S S S S S S S |
 			display_epoch_time();
 		break;
 
 		//Mode 4 allows setting the UTC time offset (-11.5hrs to +12.0hrs).
-		case (MODE_4_OFFSET) :		//	|A d J U S t             ± # #.# |
+		case (MODE_4_OFFSET) :		//	|O F F S E t             ± # #.# |
 			get_offset();
 		break;
 
