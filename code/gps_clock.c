@@ -3,8 +3,9 @@
 //The following interrupt sub-routine will be triggered every time there is a change in state of either button.
 ISR(BUTTON_PCI_VECTOR)
 {
-	_delay_ms(BUTTON_DEBOUNCE_DURATION);	//wait for DEBOUNCE_DURATION milliseconds to mitigate effect of switch bounce.
+	cli();	//Disable interrupts until this ISR is complete.
 
+	_delay_ms(BUTTON_DEBOUNCE_DURATION);	//wait for DEBOUNCE_DURATION milliseconds to mitigate effect of switch bounce.
 	//If statement captures press of the "Mode" button.  Cycles through the various display modes.
 	if(!(BUTTON_PINS & (1 << BUTTON_MODE)))
 	{
@@ -38,6 +39,8 @@ ISR(BUTTON_PCI_VECTOR)
 			attempt_sync();			//Attempt to sync the RTC time with GPS data.
 		}
 	}
+
+	sei();	Re-enable interrupts.
 }
 
 //Initialise the peripherals.
