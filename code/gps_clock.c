@@ -462,6 +462,13 @@ void rollunder_hours(void)
 	time[HOU_ONES] = hours % 10;		//Set the required value for hour ones.
 	time[HOU_TENS] = hours / 10;		//Set the required value for hour tens.
 	time[DAY_ONES] --;			//Decrement the day ones.
+
+	if (time[DAY_ONES] > 9)			//Adjust day tens if ones have dropped below zero (e.g. day: 10->09)
+	{
+		time[DAY_ONES] = 9;		//Set the day ones to 9.
+		time[DAY_TENS] --;		//Decrement the day tens.
+	}
+
 	if (DAY < 1)				//Asses the offset corrected day.  If it has rolled below minimum valid value of 1...
 	{
 		rollunder_days();		//Correct by running the rollunder days function (offset indicates local time is previous month).
@@ -476,6 +483,13 @@ void rollover_hours(void)
 	time[HOU_ONES] = hours % 10;		//Set the required value for hour ones.
 	time[HOU_TENS] = hours / 10;		//Set the required value for hour tens.
 	time[DAY_ONES] ++;			//Increment the day ones.
+
+	if (time[DAY_ONES] > 9)			//Adjust day tens if ones have incremented above 9 (e.g. day: 09->10)
+	{
+		time[DAY_ONES] = 0;		//Set the day ones to zero.
+		time[DAY_TENS] ++;		//Increment the day tens.
+	}
+
 	if (DAY > 27)				//Asses the offset corrected day.  If it is possible that the month has rolled over...
 	{
 		rollover_days();		//Check and correct (if required) by running the rollover days.
