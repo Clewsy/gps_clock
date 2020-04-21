@@ -8,6 +8,8 @@ gps_clock has the following features and characteristics:
 
 The [code][link_repo_code], schematics{[control board][link_repo_schematic_control] & [display board][link_repo_schematic_display]) and PCB layouts ([control board][link_repo_pcb_control] & [display board][link_repo_pcb_display]) are all included here on gitlab.
 
+Additional info and photos can be found [here][link_clews_projects_gps_clock].
+
 Proudly mentioned at [hackaday.com][link_web_hackaday_gpsclock].
 
 ![The completed gps_clock.][image_gps_clock]
@@ -20,6 +22,8 @@ Proudly mentioned at [hackaday.com][link_web_hackaday_gpsclock].
 [link_repo_schematic_display]:pcb/schematic_gps_clock_display_board.pdf
 [link_repo_pcb_display]:pcb/cl0ck_control/
 [link_repo_pcb_control]:pcb/cl0ck_display/
+
+[link_clews_projects_gps_clock]:https://clews.pro/projects/gps_clock.php
 
 [image_gps_clock]:images/gps_clock_github_photo.jpg
 
