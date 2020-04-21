@@ -6,7 +6,7 @@ gps_clock has the following features and characteristics:
 - Programmable UTC offset from -12hrs to +12hrs in half-hour increments to match any timezone (setting retained with power-cycle).
 - RTC with battery back-up to retain time with power-cycle and/or absence of GPS signal.
 
-The [code][link_repo_code], schematics{[control board][link_repo_schematic_control] & [display board][link_repo_schematic_display]) and PCB layouts ([control board][link_repo_pcb_control] & [display board][link_repo_pcb_display]) are all included here on gitlab.
+The [code][link_repo_code], schematics ([control board][link_repo_schematic_control] & [display board][link_repo_schematic_display]) and PCB layouts ([control board][link_repo_pcb_control] & [display board][link_repo_pcb_display]) are all included here on gitlab.
 
 Additional info and photos can be found [here][link_clews_projects_gps_clock].
 
