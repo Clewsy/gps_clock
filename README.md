@@ -10,13 +10,14 @@ The [code][link_repo_code], schematics ([control board][link_repo_schematic_cont
 
 Additional info and photos can be found [here][link_clews_projects_gps_clock].
 
-Proudly mentioned at [hackaday.com][link_web_hackaday_gpsclock].
+Proudly mentioned at [hackaday.com][link_web_hackaday_gpsclock] (and linked again in a [later article][link_web_hackaday_iso8601]).
 
 ![The completed gps_clock.][image_gps_clock]
 
 [link_web_wikipedia_epoch_time]:https://en.wikipedia.org/wiki/Epoch_time
 [link_web_wikipedia_iso-8601]:https://en.wikipedia.org/wiki/ISO-8601
 [link_web_hackaday_gpsclock]:https://hackaday.com/2018/09/18/epic-clock-clocks-the-unix-epoch/
+[link_web_hackaday_iso8601]:https://hackaday.com/2021/04/21/iso-8601-ending-the-date-wars-and-confusing-everyone-equally/
 [link_repo_code]:code/
 [link_repo_schematic_control]:pcb/schematic_gps_clock_control_board.pdf
 [link_repo_schematic_display]:pcb/schematic_gps_clock_display_board.pdf
